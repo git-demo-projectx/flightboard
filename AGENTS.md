@@ -73,6 +73,8 @@ A change to a status or a pay type usually touches the Go model, `web/src/api/ty
 | `GET /api/work-orders/{id}/nearby-providers` | Providers in the same state as the work order, highest score first, without the assigned provider, or an empty array |
 | `GET /api/work-orders/{id}/expenses` | Work order expenses, newest first; an empty array if there are none |
 | `POST /api/work-orders/{id}/expenses` | Add a `Pending` expense, body `{"category":"Parts","description":"...","amountCents":2400}`. Answers 201 with the expense, 400 for bad input, 404 for an unknown id, and 409 unless the work order is Assigned or Work Done. |
+| `POST /api/work-orders/{id}/expenses/{expenseId}/approve` | Approve a `Pending` expense, body `{}`. Answers 200 with the expense, 400 for bad input, 404 for an unknown work order or expense, and 409 when the expense is already decided or the work order is not Assigned or Work Done. |
+| `POST /api/work-orders/{id}/expenses/{expenseId}/reject` | Reject a `Pending` expense, body `{"reason":"..."}`. Requires a non-blank reason of at most 200 characters, stored trimmed. Answers 200 with the expense, 400 for bad input or a missing reason, 404 for an unknown work order or expense, and 409 when the expense is already decided or the work order is not Assigned or Work Done. |
 | `POST /api/work-orders/{id}/status` | Move to a new status, body `{"status":"Approved"}` |
 | `POST /api/work-orders/{id}/check-in` | Record check-in, body `{"time":"<RFC 3339>"}` or `{}` for now |
 | `POST /api/work-orders/{id}/check-out` | Record check-out, same body |

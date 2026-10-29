@@ -134,3 +134,131 @@ func TestCreateExpenseErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestApproveExpense(t *testing.T) {
+	for _, body := range []string{`{}`, `{"reason":"ignored"}`} {
+		t.Run(body, func(t *testing.T) {
+			s := newTestServer(t)
+			rec := do(t, s, "POST", "/api/work-orders/9631810/expenses/e1/approve", body)
+			if rec.Code != http.StatusOK {
+				t.Fatalf("code = %d body %s", rec.Code, rec.Body)
+			}
+			expense := decode[workorder.Expense](t, rec)
+			if expense.ID != "e1" || expense.Status != workorder.ExpenseApproved || expense.Reason != "" {
+				t.Errorf("expense = %+v", expense)
+			}
+			if _, exists := decode[map[string]json.RawMessage](t, rec)["reason"]; exists {
+				t.Errorf("response must omit reason: %s", rec.Body)
+			}
+			rec = do(t, s, "GET", "/api/work-orders/9631810", "")
+			if rec.Code != http.StatusOK {
+				t.Fatalf("detail code = %d body %s", rec.Code, rec.Body)
+			}
+			totals := decode[woJSON](t, rec).ExpenseTotals
+			if totals["pendingCents"] != 0 || totals["approvedCents"] != 4200 || totals["rejectedCents"] != 0 || totals["count"] != 2 {
+				t.Errorf("expenseTotals = %v", totals)
+			}
+		})
+	}
+}
+
+func TestRejectExpense(t *testing.T) {
+	s := newTestServer(t)
+	rec := do(t, s, "POST", "/api/work-orders/9631810/expenses/e1/reject", `{"reason":"  Receipt missing "}`)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("code = %d body %s", rec.Code, rec.Body)
+	}
+	expense := decode[workorder.Expense](t, rec)
+	if expense.ID != "e1" || expense.Status != workorder.ExpenseRejected || expense.Reason != "Receipt missing" {
+		t.Errorf("expense = %+v", expense)
+	}
+	rec = do(t, s, "GET", "/api/work-orders/9631810", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("detail code = %d body %s", rec.Code, rec.Body)
+	}
+	totals := decode[woJSON](t, rec).ExpenseTotals
+	if totals["rejectedCents"] != 2400 || totals["pendingCents"] != 0 || totals["approvedCents"] != 1800 || totals["count"] != 2 {
+		t.Errorf("expenseTotals = %v", totals)
+	}
+}
+
+func TestDecideExpenseErrors(t *testing.T) {
+	for _, tt := range []struct {
+		name, method, path, body string
+		code                     int
+		message                  string
+	}{
+		{"bad id", "POST", "/api/work-orders/abc/expenses/e1/approve", `{}`, 400, "id must be a number"},
+		{"unknown work order", "POST", "/api/work-orders/1/expenses/e1/approve", `{}`, 404, "not found"},
+		{"unknown expense", "POST", "/api/work-orders/9631810/expenses/e9/approve", `{}`, 404, "not found"},
+		{"already decided", "POST", "/api/work-orders/9631810/expenses/e2/approve", `{}`, 409, "conflict: expense e2 is already Approved"},
+		{"no reason", "POST", "/api/work-orders/9631810/expenses/e1/reject", `{}`, 400, "invalid work order: rejection reason is required"},
+		{"blank reason", "POST", "/api/work-orders/9631810/expenses/e1/reject", `{"reason":"  "}`, 400, "invalid work order: rejection reason is required"},
+		{"long reason", "POST", "/api/work-orders/9631810/expenses/e1/reject", `{"reason":"` + strings.Repeat("a", 201) + `"}`, 400, "invalid work order: rejection reason must not exceed 200 characters"},
+		{"not JSON", "POST", "/api/work-orders/9631810/expenses/e1/approve", "not json", 400, "invalid JSON body"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			s := newTestServer(t)
+			before, err := s.store.Expenses(9631810)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rec := do(t, s, tt.method, tt.path, tt.body)
+			if rec.Code != tt.code || decode[map[string]string](t, rec)["error"] != tt.message {
+				t.Fatalf("code = %d body %s, want %d error %q", rec.Code, rec.Body, tt.code, tt.message)
+			}
+			after, err := s.store.Expenses(9631810)
+			if err != nil || !slices.Equal(before, after) {
+				t.Errorf("failed decision changed expenses: %+v (%v)", after, err)
+			}
+		})
+	}
+}
+
+func TestDecideExpenseClosedWorkOrder(t *testing.T) {
+	for _, action := range []string{"approve", "reject"} {
+		t.Run(action, func(t *testing.T) {
+			s := newTestServer(t)
+			expense, err := s.store.AddExpense(9631810, workorder.Expense{Category: workorder.ExpenseParts, Description: "Patch cable", AmountCents: 1000})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := s.store.SetStatus(9631810, workorder.StatusCancelled); err != nil {
+				t.Fatal(err)
+			}
+			before, err := s.store.Expenses(9631810)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rec := do(t, s, "POST", "/api/work-orders/9631810/expenses/"+expense.ID+"/"+action, `{"reason":"Receipt missing"}`)
+			want := "conflict: expenses can change only while the work order is Assigned or Work Done"
+			if rec.Code != http.StatusConflict || decode[map[string]string](t, rec)["error"] != want {
+				t.Fatalf("code = %d body %s, want 409 error %q", rec.Code, rec.Body, want)
+			}
+			after, err := s.store.Expenses(9631810)
+			if err != nil || !slices.Equal(before, after) {
+				t.Errorf("closed decision changed expenses: %+v (%v)", after, err)
+			}
+		})
+	}
+}
+
+func TestRejectExpenseThenApproveWorkOrder(t *testing.T) {
+	s := newTestServer(t)
+	expense, err := s.store.AddExpense(9631819, workorder.Expense{Category: workorder.ExpenseParts, Description: "Patch cable", AmountCents: 1000})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := do(t, s, "POST", "/api/work-orders/9631819/status", `{"status":"Approved"}`)
+	if rec.Code != http.StatusConflict || decode[map[string]string](t, rec)["error"] != "approve or reject the pending expenses first" {
+		t.Fatalf("pending approval code = %d body %s", rec.Code, rec.Body)
+	}
+	rec = do(t, s, "POST", "/api/work-orders/9631819/expenses/"+expense.ID+"/reject", `{"reason":"Receipt missing"}`)
+	if rec.Code != http.StatusOK || decode[workorder.Expense](t, rec).Status != workorder.ExpenseRejected {
+		t.Fatalf("reject code = %d body %s", rec.Code, rec.Body)
+	}
+	rec = do(t, s, "POST", "/api/work-orders/9631819/status", `{"status":"Approved"}`)
+	if rec.Code != http.StatusOK || decode[woJSON](t, rec).Status != "Approved" {
+		t.Fatalf("approval code = %d body %s", rec.Code, rec.Body)
+	}
+}

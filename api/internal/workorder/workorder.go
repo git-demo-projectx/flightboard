@@ -229,6 +229,18 @@ func ValidateExpense(e Expense) error {
 	return nil
 }
 
+// ValidateRejectReason checks the buyer's reason for rejecting an expense.
+func ValidateRejectReason(reason string) error {
+	reason = strings.TrimSpace(reason)
+	if reason == "" {
+		return invalid("rejection reason is required")
+	}
+	if utf8.RuneCountInString(reason) > 200 {
+		return invalid("rejection reason must not exceed 200 characters")
+	}
+	return nil
+}
+
 // ValidatePay checks the pay terms.
 func ValidatePay(p Pay) error {
 	if p.Rate <= 0 {

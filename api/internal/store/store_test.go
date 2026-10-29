@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -382,6 +383,76 @@ func TestSetExpenseStatus(t *testing.T) {
 	after, err := s.Expenses(9631810)
 	if err != nil || !slices.Equal(after, original) {
 		t.Fatalf("failed update changed expenses: %+v, err = %v", after, err)
+	}
+}
+
+func TestDecideExpense(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		id        int
+		expenseID string
+		status    workorder.ExpenseStatus
+		reason    string
+		wantErr   error
+		message   string
+		closed    bool
+	}{
+		{name: "approve", id: 9631810, expenseID: "e1", status: workorder.ExpenseApproved},
+		{name: "approve ignores reason", id: 9631810, expenseID: "e1", status: workorder.ExpenseApproved, reason: strings.Repeat("a", 201)},
+		{name: "reject", id: 9631810, expenseID: "e1", status: workorder.ExpenseRejected, reason: "  Receipt missing  "},
+		{name: "blank reason", id: 9631810, expenseID: "e1", status: workorder.ExpenseRejected, reason: "  ", wantErr: workorder.ErrInvalid},
+		{name: "long reason", id: 9631810, expenseID: "e1", status: workorder.ExpenseRejected, reason: strings.Repeat("a", 201), wantErr: workorder.ErrInvalid},
+		{name: "already approved", id: 9631810, expenseID: "e2", status: workorder.ExpenseApproved, wantErr: ErrConflict, message: "conflict: expense e2 is already Approved"},
+		{name: "unknown expense", id: 9631810, expenseID: "e9", status: workorder.ExpenseApproved, wantErr: ErrNotFound},
+		{name: "unknown work order", id: 1, expenseID: "e1", status: workorder.ExpenseApproved, wantErr: ErrNotFound},
+		{name: "pending decision", id: 9631810, expenseID: "e1", status: workorder.ExpensePending, wantErr: workorder.ErrInvalid, message: "invalid work order: expense decision must be Approved or Rejected"},
+		{name: "invalid decision before missing work order", id: 1, expenseID: "e1", status: workorder.ExpensePending, wantErr: workorder.ErrInvalid},
+		{name: "invalid reason before missing work order", id: 1, expenseID: "e1", status: workorder.ExpenseRejected, wantErr: workorder.ErrInvalid},
+		{name: "closed work order", id: 1, expenseID: "e1", status: workorder.ExpenseApproved, wantErr: ErrExpensesClosed, closed: true},
+		{name: "closed before missing expense", id: 1, expenseID: "e9", status: workorder.ExpenseApproved, wantErr: ErrExpensesClosed, closed: true},
+		{name: "invalid reason before closed work order", id: 1, expenseID: "e1", status: workorder.ExpenseRejected, wantErr: workorder.ErrInvalid, closed: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			s := seeded(t)
+			if tt.closed {
+				s = New()
+				s.workOrders[1] = workorder.WorkOrder{ID: 1, Status: workorder.StatusApproved, Expenses: []workorder.Expense{{ID: "e1", Status: workorder.ExpensePending}}}
+			}
+			before, beforeErr := s.Expenses(tt.id)
+			expense, err := s.DecideExpense(tt.id, tt.expenseID, tt.status, tt.reason)
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("DecideExpense() err = %v, want %v", err, tt.wantErr)
+			}
+			if tt.message != "" && err.Error() != tt.message {
+				t.Errorf("error = %q, want %q", err, tt.message)
+			}
+			after, afterErr := s.Expenses(tt.id)
+			if tt.wantErr != nil {
+				if !errors.Is(afterErr, beforeErr) || !slices.Equal(before, after) {
+					t.Errorf("failed decision changed expenses: before %+v (%v), after %+v (%v)", before, beforeErr, after, afterErr)
+				}
+				return
+			}
+			want := before[0]
+			want.Status = tt.status
+			want.Reason = ""
+			if tt.status == workorder.ExpenseRejected {
+				want.Reason = "Receipt missing"
+			}
+			if expense != want || afterErr != nil || len(after) != len(before) || after[0] != want || !slices.Equal(after[1:], before[1:]) {
+				t.Errorf("expense = %+v, stored = %+v (%v), want %+v", expense, after, afterErr, want)
+			}
+			if tt.status == workorder.ExpenseRejected {
+				_, err = s.DecideExpense(tt.id, tt.expenseID, workorder.ExpenseApproved, "")
+				if !errors.Is(err, ErrConflict) || err.Error() != "conflict: expense e1 is already Rejected" {
+					t.Fatalf("redeciding rejected expense = %v", err)
+				}
+				again, err := s.Expenses(tt.id)
+				if err != nil || !slices.Equal(after, again) {
+					t.Errorf("redeciding changed expenses: %+v (%v)", again, err)
+				}
+			}
+		})
 	}
 }
 

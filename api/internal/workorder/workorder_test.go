@@ -58,6 +58,32 @@ func TestValidateExpense(t *testing.T) {
 	}
 }
 
+func TestValidateRejectReason(t *testing.T) {
+	for _, tt := range []struct {
+		name, reason, message string
+	}{
+		{"valid", "Receipt missing", ""},
+		{"empty", "", "rejection reason is required"},
+		{"blank", " \t", "rejection reason is required"},
+		{"200 characters", strings.Repeat("a", 200), ""},
+		{"trim before counting", "  " + strings.Repeat("a", 200) + "  ", ""},
+		{"201 characters", strings.Repeat("a", 201), "rejection reason must not exceed 200 characters"},
+		{"200 multibyte characters", strings.Repeat("\u00e9", 200), ""},
+		{"201 multibyte characters", strings.Repeat("\u00e9", 201), "rejection reason must not exceed 200 characters"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateRejectReason(tt.reason)
+			if tt.message == "" {
+				if err != nil {
+					t.Fatalf("ValidateRejectReason() = %v", err)
+				}
+			} else if !errors.Is(err, ErrInvalid) || err.Error() != "invalid work order: "+tt.message {
+				t.Fatalf("ValidateRejectReason() = %v, want ErrInvalid: %s", err, tt.message)
+			}
+		})
+	}
+}
+
 func TestExpenseJSON(t *testing.T) {
 	e := Expense{
 		ID: "e1", Category: ExpenseParts, Description: "Patch cable", AmountCents: 1000,

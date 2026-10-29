@@ -231,29 +231,67 @@ func (s *Store) AddExpense(id int, e workorder.Expense) (workorder.Expense, erro
 func (s *Store) SetExpenseStatus(id int, expenseID string, status workorder.ExpenseStatus, reason string) (workorder.Expense, error) {
 	var expense workorder.Expense
 	_, err := s.update(id, func(w *workorder.WorkOrder) error {
-		for i := range w.Expenses {
-			if w.Expenses[i].ID != expenseID {
-				continue
-			}
-			switch status {
-			case workorder.ExpensePending, workorder.ExpenseApproved, workorder.ExpenseRejected:
-			default:
-				return fmt.Errorf("%w: unknown expense status %q", workorder.ErrInvalid, status)
-			}
-			w.Expenses[i].Status = status
-			w.Expenses[i].Reason = ""
-			if status == workorder.ExpenseRejected {
-				w.Expenses[i].Reason = reason
-			}
-			expense = w.Expenses[i]
-			return nil
+		i := expenseIndex(w.Expenses, expenseID)
+		if i < 0 {
+			return ErrNotFound
 		}
-		return ErrNotFound
+		switch status {
+		case workorder.ExpensePending, workorder.ExpenseApproved, workorder.ExpenseRejected:
+		default:
+			return fmt.Errorf("%w: unknown expense status %q", workorder.ErrInvalid, status)
+		}
+		w.Expenses[i].Status = status
+		w.Expenses[i].Reason = ""
+		if status == workorder.ExpenseRejected {
+			w.Expenses[i].Reason = reason
+		}
+		expense = w.Expenses[i]
+		return nil
 	})
 	if err != nil {
 		return workorder.Expense{}, err
 	}
 	return expense, nil
+}
+
+// DecideExpense approves or rejects a pending expense while expenses are open.
+func (s *Store) DecideExpense(id int, expenseID string, status workorder.ExpenseStatus, reason string) (workorder.Expense, error) {
+	if status != workorder.ExpenseApproved && status != workorder.ExpenseRejected {
+		return workorder.Expense{}, fmt.Errorf("%w: expense decision must be Approved or Rejected", workorder.ErrInvalid)
+	}
+	if status == workorder.ExpenseRejected {
+		if err := workorder.ValidateRejectReason(reason); err != nil {
+			return workorder.Expense{}, err
+		}
+	}
+	var expense workorder.Expense
+	_, err := s.update(id, func(w *workorder.WorkOrder) error {
+		if !w.AcceptsExpenses() {
+			return ErrExpensesClosed
+		}
+		i := expenseIndex(w.Expenses, expenseID)
+		if i < 0 {
+			return ErrNotFound
+		}
+		if current := w.Expenses[i].Status; current != workorder.ExpensePending {
+			return fmt.Errorf("%w: expense %s is already %s", ErrConflict, expenseID, current)
+		}
+		w.Expenses[i].Status = status
+		w.Expenses[i].Reason = ""
+		if status == workorder.ExpenseRejected {
+			w.Expenses[i].Reason = strings.TrimSpace(reason)
+		}
+		expense = w.Expenses[i]
+		return nil
+	})
+	if err != nil {
+		return workorder.Expense{}, err
+	}
+	return expense, nil
+}
+
+func expenseIndex(expenses []workorder.Expense, id string) int {
+	return slices.IndexFunc(expenses, func(e workorder.Expense) bool { return e.ID == id })
 }
 
 // CheckIn records the provider's arrival on site.
