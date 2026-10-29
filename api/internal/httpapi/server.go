@@ -30,6 +30,7 @@ func New(st *store.Store) *Server {
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/health", s.health)
 	s.mux.HandleFunc("GET /api/work-orders", s.listWorkOrders)
+	s.mux.HandleFunc("GET /api/work-orders/export", s.exportWorkOrders)
 	s.mux.HandleFunc("POST /api/work-orders", s.createWorkOrder)
 	s.mux.HandleFunc("GET /api/work-orders/summary", s.workOrderSummary)
 	s.mux.HandleFunc("GET /api/work-orders/week", s.workOrderWeek)
@@ -97,18 +98,26 @@ func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "flightboard-api"})
 }
 
-func (s *Server) listWorkOrders(w http.ResponseWriter, r *http.Request) {
+func parseFilter(r *http.Request) (store.Filter, error) {
 	var f store.Filter
 	if v := r.URL.Query().Get("status"); v != "" {
 		st, err := workorder.ParseStatus(v)
 		if err != nil {
-			writeError(w, http.StatusBadRequest, err.Error())
-			return
+			return f, err
 		}
 		f.Status = st
 	}
 	f.ProviderID = r.URL.Query().Get("providerId")
 	f.TypeOfWork = r.URL.Query().Get("typeOfWork")
+	return f, nil
+}
+
+func (s *Server) listWorkOrders(w http.ResponseWriter, r *http.Request) {
+	f, err := parseFilter(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	list := s.store.ListWorkOrders(f)
 	out := make([]workOrderView, 0, len(list))
