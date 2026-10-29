@@ -3,6 +3,10 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
 import { useState, type ReactNode } from 'react'
@@ -13,6 +17,7 @@ import type { Status, Task, WorkOrder } from '../../api/types'
 import { HealthChip, ScoreBadge, StatusChip } from '../../components/Chips'
 import { PageHeader } from '../../components/PageHeader'
 import { formatSchedule, formatTime } from '../../lib/format'
+import { canCancel } from '../../lib/status'
 import { colors } from '../../theme'
 import { PayBreakdown } from './PayBreakdown'
 import { TaskList } from './TaskList'
@@ -81,6 +86,7 @@ export function WorkOrderDetailPage() {
   const id = Number(useParams().id)
   const { data: wo, error, loading, setData } = useWorkOrder(id)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
 
   async function run(change: () => Promise<WorkOrder>) {
     setActionError(null)
@@ -133,6 +139,11 @@ export function WorkOrderDetailPage() {
                 {action.label}
               </Button>
             )}
+            {canCancel(wo.status) && (
+              <Button variant="outlined" color="error" onClick={() => setCancelDialogOpen(true)}>
+                Cancel work order
+              </Button>
+            )}
           </>
         }
       />
@@ -152,6 +163,29 @@ export function WorkOrderDetailPage() {
           <PayBreakdown pay={wo.pay} />
         </Panel>
       </Box>
+      <Dialog
+        open={cancelDialogOpen}
+        onClose={() => setCancelDialogOpen(false)}
+        aria-labelledby="cancel-work-order-dialog-title"
+      >
+        <DialogTitle id="cancel-work-order-dialog-title">Cancel WO {wo.id}?</DialogTitle>
+        <DialogContent>
+          <Typography>The work order moves to Cancelled. You cannot undo this.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelDialogOpen(false)}>Keep work order</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              setCancelDialogOpen(false)
+              run(() => api.setStatus(wo.id, 'Cancelled'))
+            }}
+          >
+            Confirm cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

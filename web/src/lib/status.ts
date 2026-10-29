@@ -8,6 +8,11 @@ export interface ChipStyle {
   border?: string
 }
 
+/** Matches the API lifecycle's allowed transitions to Cancelled. */
+export function canCancel(status: Status): boolean {
+  return status === 'Draft' || status === 'Published' || status === 'Routed' || status === 'Assigned'
+}
+
 /** statusChip returns the label and colours for a work order status chip. */
 export function statusChip(status: Status): ChipStyle {
   switch (status) {

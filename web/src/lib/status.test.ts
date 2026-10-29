@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { healthChip, statusChip } from './status'
+import { STATUSES } from '../api/types'
+import { canCancel, healthChip, statusChip } from './status'
+
+it('canCancel matches the API lifecycle', () => {
+  for (const status of STATUSES) {
+    expect(canCancel(status)).toBe(['Draft', 'Published', 'Routed', 'Assigned'].includes(status))
+  }
+})
 
 describe('statusChip', () => {
   it('shows Published in green', () => {

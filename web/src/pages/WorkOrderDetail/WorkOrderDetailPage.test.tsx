@@ -27,6 +27,81 @@ beforeEach(() => {
 })
 
 describe('WorkOrderDetailPage', () => {
+  it.each(['Draft', 'Published', 'Routed', 'Assigned'] as const)(
+    'offers Cancel work order for %s work orders',
+    async (status) => {
+      vi.mocked(api.getWorkOrder).mockResolvedValue(makeWorkOrder({ id: 1000007, status }))
+      renderDetail()
+
+      expect(await screen.findByRole('button', { name: 'Cancel work order' })).toBeInTheDocument()
+    },
+  )
+
+  it.each(['Work Done', 'Approved', 'Paid', 'Cancelled'] as const)(
+    'hides Cancel work order for %s work orders',
+    async (status) => {
+      vi.mocked(api.getWorkOrder).mockResolvedValue(makeWorkOrder({ id: 1000007, status }))
+      renderDetail()
+      await screen.findByText('WO 1000007')
+
+      expect(screen.queryByRole('button', { name: 'Cancel work order' })).not.toBeInTheDocument()
+    },
+  )
+
+  it('keeps the work order when the dialog is dismissed', async () => {
+    renderDetail()
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel work order' }))
+
+    expect(screen.getByRole('dialog', { name: 'Cancel WO 1000007?' })).toBeInTheDocument()
+    expect(screen.getByText('The work order moves to Cancelled. You cannot undo this.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Keep work order' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(api.setStatus).not.toHaveBeenCalled()
+  })
+
+  it.each(['Escape', 'outside click'])(
+    'keeps the work order when the dialog is dismissed by %s',
+    async (dismissal) => {
+      renderDetail()
+      await userEvent.click(await screen.findByRole('button', { name: 'Cancel work order' }))
+
+      if (dismissal === 'Escape') {
+        await userEvent.keyboard('{Escape}')
+      } else {
+        await userEvent.click(screen.getByRole('dialog').parentElement!)
+      }
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect(api.setStatus).not.toHaveBeenCalled()
+    },
+  )
+
+  it('cancels the work order after confirmation', async () => {
+    vi.mocked(api.setStatus).mockResolvedValue(makeWorkOrder({ id: 1000007, status: 'Cancelled' }))
+    renderDetail()
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel work order' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm cancel' }))
+
+    expect(api.setStatus).toHaveBeenCalledTimes(1)
+    expect(api.setStatus).toHaveBeenCalledWith(1000007, 'Cancelled')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByText('Cancelled')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancel work order' })).not.toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Check in' })).toBeDisabled()
+  })
+
+  it('shows the API error when cancelling fails', async () => {
+    vi.mocked(api.setStatus).mockRejectedValue(new Error('service unavailable'))
+    renderDetail()
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel work order' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm cancel' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('service unavailable')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByText('Assigned')).toBeInTheDocument()
+  })
+
   it('shows the header, provider and score badge', async () => {
     renderDetail()
 
