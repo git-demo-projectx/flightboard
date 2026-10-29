@@ -74,6 +74,7 @@ A change to a status or a pay type usually touches the Go model, `web/src/api/ty
 | `GET /api/work-orders/{id}/expenses` | Work order expenses, newest first; an empty array if there are none |
 | `POST /api/work-orders/{id}/expenses` | Add a `Pending` expense, body `{"category":"Parts","description":"...","amountCents":2400}`. Answers 201 with the expense, 400 for bad input, 404 for an unknown id, and 409 unless the work order is Assigned or Work Done. |
 | `POST /api/work-orders/{id}/status` | Move to a new status, body `{"status":"Approved"}` |
+| `POST /api/work-orders/{id}/schedule` | Move the service window of a Draft, Published or Routed work order, body `{"start":"<RFC 3339>","end":"<RFC 3339>"}`. Answers 200 with the work order, 400 for a missing time, an end before the start, or a span over 14 days, 404 for an unknown id, and 409 for other statuses. |
 | `POST /api/work-orders/{id}/check-in` | Record check-in, body `{"time":"<RFC 3339>"}` or `{}` for now |
 | `POST /api/work-orders/{id}/check-out` | Record check-out, same body |
 | `POST /api/work-orders/pay-run` | Mark approved work orders Paid in one step, body `{"ids":[9631821,9631822]}`. All or nothing: an unknown id answers 404, and a work order that is not Approved answers 409. Sets `paidAt`. |

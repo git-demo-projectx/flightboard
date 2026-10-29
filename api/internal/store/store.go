@@ -31,6 +31,9 @@ var ErrPendingExpenses = errors.New("approve or reject the pending expenses firs
 // ErrExpensesClosed is returned when the work order no longer accepts expenses.
 var ErrExpensesClosed = fmt.Errorf("%w: expenses can change only while the work order is Assigned or Work Done", ErrConflict)
 
+// ErrNotReschedulable is returned when the status does not allow rescheduling.
+var ErrNotReschedulable = fmt.Errorf("%w: only Draft, Published or Routed work orders can be rescheduled", ErrConflict)
+
 // Filter narrows a work order listing. Zero values match everything.
 type Filter struct {
 	Status     workorder.Status
@@ -175,6 +178,22 @@ func (s *Store) SetStatus(id int, to workorder.Status) (workorder.WorkOrder, err
 		if to != workorder.StatusAssigned {
 			w.SubStatus = ""
 		}
+		return nil
+	})
+}
+
+// Reschedule moves the service window of an unassigned work order.
+func (s *Store) Reschedule(id int, sc workorder.Schedule) (workorder.WorkOrder, error) {
+	return s.update(id, func(w *workorder.WorkOrder) error {
+		switch w.Status {
+		case workorder.StatusDraft, workorder.StatusPublished, workorder.StatusRouted:
+		default:
+			return ErrNotReschedulable
+		}
+		if err := workorder.ValidateSchedule(sc); err != nil {
+			return err
+		}
+		w.Schedule = &sc
 		return nil
 	})
 }

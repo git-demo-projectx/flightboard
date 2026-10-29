@@ -3,7 +3,9 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"reflect"
 	"slices"
+	"strconv"
 	"testing"
 	"time"
 
@@ -203,6 +205,83 @@ func TestSetStatusWithExpenses(t *testing.T) {
 			}
 			if w.Status != wantStatus || !slices.Equal(w.Expenses, tt.expenses) {
 				t.Fatalf("stored work order = %+v, want status %s and unchanged expenses", w, wantStatus)
+			}
+		})
+	}
+}
+
+func TestReschedule(t *testing.T) {
+	s := seeded(t)
+	start := time.Date(2026, 11, 3, 15, 0, 0, 0, time.UTC)
+	sc := workorder.Schedule{Start: start, End: start.Add(4 * time.Hour)}
+	draft, err := s.CreateWorkOrder(workorder.WorkOrder{Title: "New draft", Status: workorder.StatusDraft})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []int{9631804, draft.ID, 9631807} {
+		t.Run(strconv.Itoa(id), func(t *testing.T) {
+			before, err := s.GetWorkOrder(id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if id == 9631804 && (before.Status != workorder.StatusPublished || before.Title != "Rack and stack two edge servers") {
+				t.Fatalf("unexpected Published work order: %+v", before)
+			}
+			got, err := s.Reschedule(id, sc)
+			if err != nil {
+				t.Fatalf("Reschedule: %v", err)
+			}
+			want := before
+			want.Schedule = &sc
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("returned work order = %+v, want %+v", got, want)
+			}
+			stored, err := s.GetWorkOrder(id)
+			if err != nil || !reflect.DeepEqual(stored, want) {
+				t.Fatalf("stored work order = %+v, err = %v, want %+v", stored, err, want)
+			}
+			got.Schedule.Start = start.Add(time.Hour)
+			stored, err = s.GetWorkOrder(id)
+			if err != nil || !reflect.DeepEqual(stored, want) {
+				t.Fatalf("caller mutation changed stored schedule: %+v, err = %v", stored, err)
+			}
+		})
+	}
+}
+
+func TestRescheduleRejects(t *testing.T) {
+	start := time.Date(2026, 11, 3, 15, 0, 0, 0, time.UTC)
+	valid := workorder.Schedule{Start: start, End: start.Add(4 * time.Hour)}
+	invalid := workorder.Schedule{Start: start, End: start.Add(-time.Hour)}
+	for _, tt := range []struct {
+		name string
+		id   int
+		sc   workorder.Schedule
+		err  error
+	}{
+		{"Assigned", 9631810, valid, ErrNotReschedulable},
+		{"Work Done", 9631818, valid, ErrNotReschedulable},
+		{"Approved", 9631821, valid, ErrNotReschedulable},
+		{"Paid", 9631823, valid, ErrNotReschedulable},
+		{"Cancelled", 9631825, valid, ErrNotReschedulable},
+		{"Draft invalid window", 9631801, invalid, workorder.ErrInvalid},
+		{"Assigned invalid window", 9631810, invalid, ErrNotReschedulable},
+		{"unknown id", 1, valid, ErrNotFound},
+		{"unknown id invalid window", 1, invalid, ErrNotFound},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			s := seeded(t)
+			before, beforeErr := s.GetWorkOrder(tt.id)
+			_, err := s.Reschedule(tt.id, tt.sc)
+			if !errors.Is(err, tt.err) {
+				t.Fatalf("Reschedule err = %v, want %v", err, tt.err)
+			}
+			if tt.err == ErrNotReschedulable && !errors.Is(err, ErrConflict) {
+				t.Fatalf("Reschedule err = %v, want ErrConflict", err)
+			}
+			after, err := s.GetWorkOrder(tt.id)
+			if !errors.Is(err, beforeErr) || !reflect.DeepEqual(after, before) {
+				t.Fatalf("rejected reschedule changed work order: %+v, err = %v", after, err)
 			}
 		})
 	}

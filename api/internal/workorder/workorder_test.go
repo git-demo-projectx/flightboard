@@ -110,6 +110,39 @@ func validPublished() WorkOrder {
 	}
 }
 
+func TestValidateSchedule(t *testing.T) {
+	start := time.Date(2026, 11, 3, 9, 0, 0, 0, time.UTC)
+	zonedStart := time.Date(2026, 11, 3, 9, 0, 0, 0, time.FixedZone("EST", -5*60*60))
+	for _, tt := range []struct {
+		name     string
+		schedule Schedule
+		wantErr  string
+	}{
+		{"four hours", Schedule{Start: start, End: start.Add(4 * time.Hour)}, ""},
+		{"same start and end", Schedule{Start: start, End: start}, ""},
+		{"exactly 14 days", Schedule{Start: start, End: start.Add(14 * 24 * time.Hour)}, ""},
+		{"14 days and 1 minute", Schedule{Start: start, End: start.Add(14*24*time.Hour + time.Minute)}, "invalid work order: schedule must not span more than 14 days"},
+		{"zero start", Schedule{End: start}, "invalid work order: schedule start and end are required"},
+		{"zero end", Schedule{Start: start}, "invalid work order: schedule start and end are required"},
+		{"end before start", Schedule{Start: start.Add(4 * time.Hour), End: start}, "invalid work order: schedule end must be after start"},
+		{"end before start across zones", Schedule{Start: zonedStart, End: start.Add(4*time.Hour + 30*time.Minute)}, "invalid work order: schedule end must be after start"},
+		{"valid across zones", Schedule{Start: zonedStart, End: start.Add(9 * time.Hour)}, ""},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateSchedule(tt.schedule)
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Fatalf("ValidateSchedule() err = %v, want nil", err)
+				}
+				return
+			}
+			if !errors.Is(err, ErrInvalid) || err.Error() != tt.wantErr {
+				t.Fatalf("ValidateSchedule() err = %v, want %q wrapping ErrInvalid", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestValidateNew(t *testing.T) {
 	tests := []struct {
 		name    string

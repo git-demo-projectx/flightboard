@@ -251,6 +251,20 @@ func ValidatePay(p Pay) error {
 	return nil
 }
 
+// ValidateSchedule checks the service window as instants, regardless of time zone.
+func ValidateSchedule(s Schedule) error {
+	if s.Start.IsZero() || s.End.IsZero() {
+		return invalid("schedule start and end are required")
+	}
+	if s.End.Before(s.Start) {
+		return invalid("schedule end must be after start")
+	}
+	if s.End.Sub(s.Start) > 14*24*time.Hour {
+		return invalid("schedule must not span more than 14 days")
+	}
+	return nil
+}
+
 // ValidateNew checks a work order before it is created. Drafts need only
 // a title. Published work orders need schedule, location and pay.
 func ValidateNew(w WorkOrder) error {
@@ -272,11 +286,8 @@ func ValidateNew(w WorkOrder) error {
 	if w.Schedule == nil || w.Schedule.Start.IsZero() || w.Schedule.End.IsZero() {
 		return invalid("schedule is required to publish")
 	}
-	if w.Schedule.End.Before(w.Schedule.Start) {
-		return invalid("schedule end must be after start")
-	}
-	if w.Schedule.End.Sub(w.Schedule.Start) > 14*24*time.Hour {
-		return invalid("schedule must not span more than 14 days")
+	if err := ValidateSchedule(*w.Schedule); err != nil {
+		return err
 	}
 	return ValidatePay(w.Pay)
 }
