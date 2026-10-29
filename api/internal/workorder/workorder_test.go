@@ -8,6 +8,18 @@ import (
 	"time"
 )
 
+func TestAcceptsExpenses(t *testing.T) {
+	for _, status := range Statuses {
+		t.Run(string(status), func(t *testing.T) {
+			w := WorkOrder{Status: status}
+			want := status == StatusAssigned || status == StatusWorkDone
+			if got := w.AcceptsExpenses(); got != want {
+				t.Errorf("AcceptsExpenses(%s) = %v, want %v", status, got, want)
+			}
+		})
+	}
+}
+
 func TestValidateExpense(t *testing.T) {
 	tests := []struct {
 		name    string

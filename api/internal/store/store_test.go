@@ -323,9 +323,29 @@ func TestAddExpense(t *testing.T) {
 	if err != nil || !slices.Equal(unchanged, expenses) {
 		t.Fatalf("invalid expense changed store: %+v, err = %v", unchanged, err)
 	}
-	first, err := s.AddExpense(9631801, workorder.Expense{Category: workorder.ExpenseOther, Description: "Shipping", AmountCents: 500})
+	first, err := s.AddExpense(9631811, workorder.Expense{Category: workorder.ExpenseOther, Description: "Shipping", AmountCents: 500})
 	if err != nil || first.ID != "e1" {
 		t.Fatalf("first expense = %+v, err = %v", first, err)
+	}
+}
+
+func TestAddExpenseClosedWorkOrder(t *testing.T) {
+	s := seeded(t)
+	input := workorder.Expense{Category: workorder.ExpenseParts, Description: "Patch cable", AmountCents: 1000}
+	for _, id := range []int{9631801, 9631821, 9631823, 9631825} {
+		for _, expense := range []workorder.Expense{input, {}} {
+			if _, err := s.AddExpense(id, expense); !errors.Is(err, ErrConflict) || !errors.Is(err, ErrExpensesClosed) {
+				t.Fatalf("AddExpense(%d) err = %v, want ErrConflict and ErrExpensesClosed", id, err)
+			}
+			expenses, err := s.Expenses(id)
+			if err != nil || len(expenses) != 0 {
+				t.Fatalf("closed work order %d expenses = %+v, err = %v", id, expenses, err)
+			}
+		}
+	}
+	first, err := s.AddExpense(9631818, input)
+	if err != nil || first.ID != "e1" {
+		t.Fatalf("Work Done first expense = %+v, err = %v", first, err)
 	}
 }
 

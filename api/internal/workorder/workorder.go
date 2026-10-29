@@ -160,6 +160,11 @@ type WorkOrder struct {
 	Health   Health    `json:"health"`
 }
 
+// AcceptsExpenses reports whether provider expenses may be added.
+func (w WorkOrder) AcceptsExpenses() bool {
+	return w.Status == StatusAssigned || w.Status == StatusWorkDone
+}
+
 // DefaultTasks returns the tasks every new work order starts with.
 func DefaultTasks() []Task {
 	return []Task{

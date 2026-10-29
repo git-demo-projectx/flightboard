@@ -72,6 +72,7 @@ A change to a status or a pay type usually touches the Go model, `web/src/api/ty
 | `GET /api/work-orders/{id}/progress` | Done and total task counts by group and overall, with a rounded-down completion percent |
 | `GET /api/work-orders/{id}/nearby-providers` | Providers in the same state as the work order, highest score first, without the assigned provider, or an empty array |
 | `GET /api/work-orders/{id}/expenses` | Work order expenses, newest first; an empty array if there are none |
+| `POST /api/work-orders/{id}/expenses` | Add a `Pending` expense, body `{"category":"Parts","description":"...","amountCents":2400}`. Answers 201 with the expense, 400 for bad input, 404 for an unknown id, and 409 unless the work order is Assigned or Work Done. |
 | `POST /api/work-orders/{id}/status` | Move to a new status, body `{"status":"Approved"}` |
 | `POST /api/work-orders/{id}/check-in` | Record check-in, body `{"time":"<RFC 3339>"}` or `{}` for now |
 | `POST /api/work-orders/{id}/check-out` | Record check-out, same body |
