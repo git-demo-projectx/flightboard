@@ -30,6 +30,42 @@ final class AppTest extends TestCase
         ], $body);
     }
 
+    public function testQuoteWithOvertime(): void
+    {
+        [$status, $body] = (new App())->handle('POST', '/quote', '{"type":"Hourly","rate":65,"hours":10}');
+
+        self::assertSame(200, $status);
+        self::assertSame([
+            'type' => 'Hourly',
+            'lines' => [
+                ['label' => 'Labor - Hourly pay (8 hr x $65.00)', 'amount' => 520.0],
+                ['label' => 'Labor - Overtime (2 hr x $97.50)', 'amount' => 195.0],
+            ],
+            'total' => 715.0,
+        ], $body);
+    }
+
+    public function testQuoteWithOvertimeAndExpenses(): void
+    {
+        [$status, $body] = (new App())->handle('POST', '/quote', json_encode([
+            'type' => 'Hourly',
+            'rate' => 65,
+            'hours' => 10,
+            'expenses' => [['category' => 'Parts', 'amountCents' => 1250]],
+        ], JSON_THROW_ON_ERROR));
+
+        self::assertSame(200, $status);
+        self::assertSame([
+            'type' => 'Hourly',
+            'lines' => [
+                ['label' => 'Labor - Hourly pay (8 hr x $65.00)', 'amount' => 520.0],
+                ['label' => 'Labor - Overtime (2 hr x $97.50)', 'amount' => 195.0],
+                ['label' => 'Expense - Parts', 'amount' => 12.5],
+            ],
+            'total' => 727.5,
+        ], $body);
+    }
+
     public function testQuoteWithTwoExpenses(): void
     {
         [$status, $body] = (new App())->handle('POST', '/quote', json_encode([

@@ -79,7 +79,7 @@ A change to a status or a pay type usually touches the Go model, `web/src/api/ty
 | `POST /api/work-orders/pay-run` | Mark approved work orders Paid in one step, body `{"ids":[9631821,9631822]}`. All or nothing: an unknown id answers 404, and a work order that is not Approved answers 409. Sets `paidAt`. |
 | `PATCH /api/work-orders/{id}/tasks/{taskId}` | Mark a task done, body `{"done":true}` |
 | `GET /api/providers`, `GET /api/providers/{id}` | Providers, highest score first |
-| `POST /pay/quote` | Pay quote, body is a work order `pay` object |
+| `POST /pay/quote` | Pay quote, body is a work order `pay` object. Hourly hours over 8 pay 1.5 times the rate on a separate `Labor - Overtime` line. |
 
 `expenseTotals` has `count`, `pendingCents`, `approvedCents`, and `rejectedCents`.
 The count includes all expenses; cents are summed by expense status. All fields are zero for a work order without expenses.

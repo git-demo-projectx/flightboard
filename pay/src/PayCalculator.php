@@ -6,6 +6,7 @@ namespace Flightboard\Pay;
 
 /**
  * Computes what a provider earns for a work order.
+ * Hourly hours over 8 are paid at 1.5 times the rate on an Overtime line.
  *
  * Input matches the `pay` object of a work order from the API:
  *   ['type' => 'Hourly', 'rate' => 65, 'hours' => 4]
@@ -16,6 +17,9 @@ namespace Flightboard\Pay;
 final class PayCalculator
 {
     public const TYPES = ['Fixed', 'Hourly', 'PerDevice', 'Blended'];
+
+    private const REGULAR_HOURS = 8.0;
+    private const OVERTIME_MULTIPLIER = 1.5;
 
     /**
      * @param array<string, mixed> $pay
@@ -57,7 +61,7 @@ final class PayCalculator
         return [
             'type' => $type,
             'lines' => $lines,
-            'total' => $expenses === [] ? $total : round($total, 2),
+            'total' => count($lines) > 1 ? round($total, 2) : $total,
         ];
     }
 
@@ -70,9 +74,20 @@ final class PayCalculator
     /** @return list<array{label: string, amount: float}> */
     private function hourly(float $rate, float $hours): array
     {
-        $label = sprintf('Labor - Hourly pay (%s hr x %s)', $this->trim($hours), Money::format($rate));
+        $regularHours = min($hours, self::REGULAR_HOURS);
+        $label = sprintf('Labor - Hourly pay (%s hr x %s)', $this->trim($regularHours), Money::format($rate));
+        $lines = [['label' => $label, 'amount' => round($rate * $regularHours, 2)]];
 
-        return [['label' => $label, 'amount' => round($rate * $hours, 2)]];
+        if ($hours > self::REGULAR_HOURS) {
+            $overtimeHours = $hours - self::REGULAR_HOURS;
+            $overtimeRate = $rate * self::OVERTIME_MULTIPLIER;
+            $lines[] = [
+                'label' => sprintf('Labor - Overtime (%s hr x %s)', $this->trim($overtimeHours), Money::format($overtimeRate)),
+                'amount' => round($overtimeRate * $overtimeHours, 2),
+            ];
+        }
+
+        return $lines;
     }
 
     /** @return list<array{label: string, amount: float}> */

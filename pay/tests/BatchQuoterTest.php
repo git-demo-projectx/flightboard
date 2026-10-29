@@ -29,6 +29,19 @@ final class BatchQuoterTest extends TestCase
         ], (new BatchQuoter(new PayCalculator()))->quote($items));
     }
 
+    public function testOvertimeCountsAsLabor(): void
+    {
+        $items = [
+            ['id' => 1, 'pay' => ['type' => 'Hourly', 'rate' => 65, 'hours' => 10], 'approvedExpenseCents' => 1250],
+        ];
+
+        self::assertSame([
+            'items' => [['id' => 1, 'labor' => 715.0, 'expenses' => 12.5, 'total' => 727.5]],
+            'count' => 1,
+            'total' => 727.5,
+        ], (new BatchQuoter(new PayCalculator()))->quote($items));
+    }
+
     #[DataProvider('nestedExpenses')]
     public function testIgnoresNestedExpenses(mixed $expenses): void
     {
