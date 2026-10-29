@@ -495,7 +495,7 @@ func TestWorkOrderSummaryCountsPendingWorkOrders(t *testing.T) {
 		want int
 	}{
 		{id: 9631810, want: 1},
-		{id: 9631801, want: 2},
+		{id: 9631811, want: 2},
 	} {
 		added, err := s.store.AddExpense(tt.id, workorder.Expense{
 			Category: workorder.ExpenseOther, Description: "Parking", AmountCents: 500,
@@ -513,7 +513,7 @@ func TestWorkOrderSummaryCountsPendingWorkOrders(t *testing.T) {
 			}
 			got := decode[map[string]json.RawMessage](t, rec)
 			want := tt.want
-			if tt.id == 9631801 && status != workorder.ExpensePending {
+			if tt.id == 9631811 && status != workorder.ExpensePending {
 				want = 1
 			}
 			if string(got["pendingExpenses"]) != strconv.Itoa(want) {

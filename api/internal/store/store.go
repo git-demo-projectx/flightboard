@@ -28,6 +28,9 @@ var ErrConflict = errors.New("conflict")
 // ErrPendingExpenses is returned when approval needs expense decisions first.
 var ErrPendingExpenses = errors.New("approve or reject the pending expenses first")
 
+// ErrExpensesClosed is returned when the work order no longer accepts expenses.
+var ErrExpensesClosed = fmt.Errorf("%w: expenses can change only while the work order is Assigned or Work Done", ErrConflict)
+
 // Filter narrows a work order listing. Zero values match everything.
 type Filter struct {
 	Status     workorder.Status
@@ -205,6 +208,9 @@ func (s *Store) Expenses(id int) ([]workorder.Expense, error) {
 // AddExpense validates an expense and assigns its server-owned fields.
 func (s *Store) AddExpense(id int, e workorder.Expense) (workorder.Expense, error) {
 	_, err := s.update(id, func(w *workorder.WorkOrder) error {
+		if !w.AcceptsExpenses() {
+			return ErrExpensesClosed
+		}
 		if err := workorder.ValidateExpense(e); err != nil {
 			return err
 		}
