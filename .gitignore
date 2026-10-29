@@ -1,0 +1,9 @@
+.DS_Store
+.env
+.env.*
+*.log
+api/bin/
+pay/vendor/
+pay/.phpunit.cache/
+web/node_modules/
+web/dist/

@@ -1,0 +1,1331 @@
+{
+  "providers": [
+    {
+      "id": "p-101",
+      "name": "Dana Whitfield",
+      "score": 97,
+      "city": "Minneapolis",
+      "state": "MN"
+    },
+    {
+      "id": "p-102",
+      "name": "Marcus Oyelaran",
+      "score": 95,
+      "city": "Chicago",
+      "state": "IL"
+    },
+    {
+      "id": "p-103",
+      "name": "Priya Ramaswami",
+      "score": 92,
+      "city": "Denver",
+      "state": "CO"
+    },
+    {
+      "id": "p-104",
+      "name": "Tomas Lindqvist",
+      "score": 89,
+      "city": "Saint Paul",
+      "state": "MN"
+    },
+    {
+      "id": "p-105",
+      "name": "Keisha Abernathy",
+      "score": 86,
+      "city": "Milwaukee",
+      "state": "WI"
+    },
+    {
+      "id": "p-106",
+      "name": "Luis Carvajal",
+      "score": 81,
+      "city": "Austin",
+      "state": "TX"
+    },
+    {
+      "id": "p-107",
+      "name": "Hana Kowalczyk",
+      "score": 74,
+      "city": "Columbus",
+      "state": "OH"
+    },
+    {
+      "id": "p-108",
+      "name": "Ravi Desouza",
+      "score": 68,
+      "city": "Phoenix",
+      "state": "AZ"
+    }
+  ],
+  "workOrders": [
+    {
+      "id": 9631801,
+      "title": "Replace POS terminals at checkout lanes",
+      "typeOfWork": "Point of Sale",
+      "status": "Draft",
+      "buyer": "Northwind Retail",
+      "location": {
+        "city": "Bloomington",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-26T09:00:00-05:00",
+        "end": "2026-10-26T13:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 45,
+        "devices": 6
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t5",
+          "group": "On Site",
+          "title": "Upload photos of installed equipment",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631802,
+      "title": "Install wireless access points, 2nd floor",
+      "typeOfWork": "Networking",
+      "status": "Draft",
+      "buyer": "Harbor Lane Hotels",
+      "location": {
+        "city": "Madison",
+        "state": "WI"
+      },
+      "schedule": {
+        "start": "2026-10-27T08:00:00-05:00",
+        "end": "2026-10-27T14:00:00-05:00"
+      },
+      "pay": {
+        "type": "Hourly",
+        "rate": 62,
+        "hours": 6
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631803,
+      "title": "Kiosk printer swap",
+      "typeOfWork": "Kiosk",
+      "status": "Draft",
+      "buyer": "Corvid Logistics",
+      "location": {
+        "city": "Omaha",
+        "state": "NE"
+      },
+      "schedule": {
+        "start": "2026-10-28T10:00:00-05:00",
+        "end": "2026-10-28T12:00:00-05:00"
+      },
+      "pay": {
+        "type": "Fixed",
+        "rate": 180
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t5",
+          "group": "On Site",
+          "title": "Upload photos of installed equipment",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631804,
+      "title": "Rack and stack two edge servers",
+      "typeOfWork": "Server",
+      "status": "Published",
+      "buyer": "Bluepine Clinics",
+      "location": {
+        "city": "Des Moines",
+        "state": "IA"
+      },
+      "schedule": {
+        "start": "2026-10-23T09:00:00-05:00",
+        "end": "2026-10-23T14:00:00-05:00"
+      },
+      "pay": {
+        "type": "Hourly",
+        "rate": 75,
+        "hours": 5
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631805,
+      "title": "Run Cat6 drops for new nurse station",
+      "typeOfWork": "Low Voltage Cabling",
+      "status": "Published",
+      "buyer": "Bluepine Clinics",
+      "location": {
+        "city": "Rochester",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-24T08:00:00-05:00",
+        "end": "2026-10-24T16:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 55,
+        "devices": 12
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "Review"
+    },
+    {
+      "id": 9631806,
+      "title": "Desktop refresh, front office",
+      "typeOfWork": "Desktop/Laptop",
+      "status": "Published",
+      "buyer": "Maple & Main Credit Union",
+      "location": {
+        "city": "Fargo",
+        "state": "ND"
+      },
+      "schedule": {
+        "start": "2026-10-22T09:00:00-05:00",
+        "end": "2026-10-22T15:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 38,
+        "devices": 14
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631807,
+      "title": "VoIP handset rollout",
+      "typeOfWork": "Telecom/VoIP",
+      "status": "Routed",
+      "buyer": "Corvid Logistics",
+      "location": {
+        "city": "Kansas City",
+        "state": "MO"
+      },
+      "schedule": {
+        "start": "2026-10-22T08:00:00-05:00",
+        "end": "2026-10-22T12:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 25,
+        "devices": 20
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631808,
+      "title": "Conference room AV troubleshooting",
+      "typeOfWork": "Audio Visual",
+      "status": "Routed",
+      "buyer": "Harbor Lane Hotels",
+      "location": {
+        "city": "Chicago",
+        "state": "IL"
+      },
+      "schedule": {
+        "start": "2026-10-21T13:00:00-05:00",
+        "end": "2026-10-21T16:00:00-05:00"
+      },
+      "pay": {
+        "type": "Hourly",
+        "rate": 70,
+        "hours": 3
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "Alert"
+    },
+    {
+      "id": 9631809,
+      "title": "Badge reader install at loading dock",
+      "typeOfWork": "Alarm & Security",
+      "status": "Routed",
+      "buyer": "Northwind Retail",
+      "location": {
+        "city": "Duluth",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-23T10:00:00-05:00",
+        "end": "2026-10-23T13:00:00-05:00"
+      },
+      "pay": {
+        "type": "Fixed",
+        "rate": 260
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t5",
+          "group": "On Site",
+          "title": "Upload photos of installed equipment",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631810,
+      "title": "Replace failed switch in IDF closet",
+      "typeOfWork": "Networking",
+      "status": "Assigned",
+      "subStatus": "Checked In",
+      "buyer": "Northwind Retail",
+      "providerId": "p-101",
+      "location": {
+        "city": "Minneapolis",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-19T08:00:00-05:00",
+        "end": "2026-10-19T12:00:00-05:00"
+      },
+      "checkIn": "2026-10-19T08:04:00-05:00",
+      "expenses": [
+        {
+          "id": "e1",
+          "category": "Parts",
+          "description": "Replacement patch cables",
+          "amountCents": 2400,
+          "status": "Pending",
+          "createdAt": "2026-10-19T08:30:00-05:00"
+        },
+        {
+          "id": "e2",
+          "category": "Mileage",
+          "description": "Travel to the service location",
+          "amountCents": 1800,
+          "status": "Approved",
+          "createdAt": "2026-10-19T08:05:00-05:00"
+        }
+      ],
+      "pay": {
+        "type": "Hourly",
+        "rate": 65,
+        "hours": 4
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631811,
+      "title": "ATM cassette and card reader service",
+      "typeOfWork": "ATM",
+      "status": "Assigned",
+      "subStatus": "On My Way",
+      "buyer": "Maple & Main Credit Union",
+      "providerId": "p-102",
+      "location": {
+        "city": "Evanston",
+        "state": "IL"
+      },
+      "schedule": {
+        "start": "2026-10-19T10:00:00-05:00",
+        "end": "2026-10-19T12:00:00-05:00"
+      },
+      "pay": {
+        "type": "Fixed",
+        "rate": 225
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631812,
+      "title": "Label printer install, 3 stations",
+      "typeOfWork": "Printer",
+      "status": "Assigned",
+      "subStatus": "Confirmed",
+      "buyer": "Corvid Logistics",
+      "providerId": "p-104",
+      "location": {
+        "city": "Saint Paul",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-20T09:00:00-05:00",
+        "end": "2026-10-20T12:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 30,
+        "devices": 3
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631813,
+      "title": "Digital signage mount and configure",
+      "typeOfWork": "Audio Visual",
+      "status": "Assigned",
+      "subStatus": "Start Time Set",
+      "buyer": "Harbor Lane Hotels",
+      "providerId": "p-103",
+      "location": {
+        "city": "Denver",
+        "state": "CO"
+      },
+      "schedule": {
+        "start": "2026-10-21T11:00:00-05:00",
+        "end": "2026-10-21T15:00:00-05:00"
+      },
+      "pay": {
+        "type": "Hourly",
+        "rate": 68,
+        "hours": 4
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "Review"
+    },
+    {
+      "id": 9631814,
+      "title": "Emergency circuit check for server room",
+      "typeOfWork": "Electrical",
+      "status": "Assigned",
+      "subStatus": "On Hold",
+      "buyer": "Bluepine Clinics",
+      "providerId": "p-105",
+      "location": {
+        "city": "Milwaukee",
+        "state": "WI"
+      },
+      "schedule": {
+        "start": "2026-10-19T07:00:00-05:00",
+        "end": "2026-10-19T10:00:00-05:00"
+      },
+      "pay": {
+        "type": "Hourly",
+        "rate": 90,
+        "hours": 3
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "Alert"
+    },
+    {
+      "id": 9631815,
+      "title": "POS network troubleshooting",
+      "typeOfWork": "Point of Sale",
+      "status": "Assigned",
+      "subStatus": "Checked Out",
+      "buyer": "Northwind Retail",
+      "providerId": "p-106",
+      "location": {
+        "city": "Austin",
+        "state": "TX"
+      },
+      "schedule": {
+        "start": "2026-10-19T07:00:00-05:00",
+        "end": "2026-10-19T10:00:00-05:00"
+      },
+      "checkIn": "2026-10-19T07:04:00-05:00",
+      "checkOut": "2026-10-19T09:48:00-05:00",
+      "pay": {
+        "type": "Hourly",
+        "rate": 60,
+        "hours": 3
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t5",
+          "group": "On Site",
+          "title": "Upload photos of installed equipment",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631816,
+      "title": "Camera system upgrade, parking lot",
+      "typeOfWork": "Alarm & Security",
+      "status": "Assigned",
+      "subStatus": "Confirmed",
+      "buyer": "Corvid Logistics",
+      "providerId": "p-107",
+      "location": {
+        "city": "Columbus",
+        "state": "OH"
+      },
+      "schedule": {
+        "start": "2026-10-20T08:00:00-05:00",
+        "end": "2026-10-20T14:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 85,
+        "devices": 8
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t5",
+          "group": "On Site",
+          "title": "Upload photos of installed equipment",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "Alert"
+    },
+    {
+      "id": 9631817,
+      "title": "Laptop imaging for new hires",
+      "typeOfWork": "Desktop/Laptop",
+      "status": "Assigned",
+      "subStatus": "Start Time Set",
+      "buyer": "Maple & Main Credit Union",
+      "providerId": "p-101",
+      "location": {
+        "city": "Edina",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-22T09:00:00-05:00",
+        "end": "2026-10-22T14:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 35,
+        "devices": 10
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631818,
+      "title": "Patch panel cleanup and labelling",
+      "typeOfWork": "Low Voltage Cabling",
+      "status": "Work Done",
+      "buyer": "Bluepine Clinics",
+      "providerId": "p-104",
+      "location": {
+        "city": "Saint Paul",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-16T08:00:00-05:00",
+        "end": "2026-10-16T13:00:00-05:00"
+      },
+      "checkIn": "2026-10-16T08:04:00-05:00",
+      "checkOut": "2026-10-16T12:48:00-05:00",
+      "pay": {
+        "type": "Hourly",
+        "rate": 58,
+        "hours": 5
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": true
+        }
+      ],
+      "health": "Review"
+    },
+    {
+      "id": 9631819,
+      "title": "Replace lobby kiosk touchscreen",
+      "typeOfWork": "Kiosk",
+      "status": "Work Done",
+      "buyer": "Harbor Lane Hotels",
+      "providerId": "p-102",
+      "location": {
+        "city": "Chicago",
+        "state": "IL"
+      },
+      "schedule": {
+        "start": "2026-10-16T13:00:00-05:00",
+        "end": "2026-10-16T15:00:00-05:00"
+      },
+      "checkIn": "2026-10-16T13:04:00-05:00",
+      "checkOut": "2026-10-16T14:48:00-05:00",
+      "pay": {
+        "type": "Fixed",
+        "rate": 195
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t5",
+          "group": "On Site",
+          "title": "Upload photos of installed equipment",
+          "done": true
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": true
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631820,
+      "title": "Firewall swap at branch office",
+      "typeOfWork": "Networking",
+      "status": "Work Done",
+      "buyer": "Maple & Main Credit Union",
+      "providerId": "p-103",
+      "location": {
+        "city": "Boulder",
+        "state": "CO"
+      },
+      "schedule": {
+        "start": "2026-10-15T18:00:00-05:00",
+        "end": "2026-10-15T21:00:00-05:00"
+      },
+      "checkIn": "2026-10-15T18:22:00-05:00",
+      "checkOut": "2026-10-15T20:48:00-05:00",
+      "pay": {
+        "type": "Hourly",
+        "rate": 80,
+        "hours": 3
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": true
+        }
+      ],
+      "health": "Alert"
+    },
+    {
+      "id": 9631821,
+      "title": "Receipt printer replacement",
+      "typeOfWork": "Printer",
+      "status": "Approved",
+      "buyer": "Northwind Retail",
+      "providerId": "p-105",
+      "location": {
+        "city": "Racine",
+        "state": "WI"
+      },
+      "schedule": {
+        "start": "2026-10-12T09:00:00-05:00",
+        "end": "2026-10-12T11:00:00-05:00"
+      },
+      "checkIn": "2026-10-12T09:04:00-05:00",
+      "checkOut": "2026-10-12T10:48:00-05:00",
+      "pay": {
+        "type": "Fixed",
+        "rate": 140
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": true
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631822,
+      "title": "Desk phone moves, 12 seats",
+      "typeOfWork": "Telecom/VoIP",
+      "status": "Approved",
+      "buyer": "Corvid Logistics",
+      "providerId": "p-106",
+      "location": {
+        "city": "Round Rock",
+        "state": "TX"
+      },
+      "schedule": {
+        "start": "2026-10-13T08:00:00-05:00",
+        "end": "2026-10-13T12:00:00-05:00"
+      },
+      "checkIn": "2026-10-13T08:04:00-05:00",
+      "checkOut": "2026-10-13T11:48:00-05:00",
+      "pay": {
+        "type": "PerDevice",
+        "rate": 18,
+        "devices": 12
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": true
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631823,
+      "title": "Server UPS battery replacement",
+      "typeOfWork": "Server",
+      "status": "Paid",
+      "buyer": "Bluepine Clinics",
+      "providerId": "p-101",
+      "location": {
+        "city": "Minneapolis",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-08T07:00:00-05:00",
+        "end": "2026-10-08T09:00:00-05:00"
+      },
+      "checkIn": "2026-10-08T07:04:00-05:00",
+      "checkOut": "2026-10-08T08:48:00-05:00",
+      "pay": {
+        "type": "Fixed",
+        "rate": 210
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": true
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631824,
+      "title": "Wi-Fi survey, warehouse",
+      "typeOfWork": "Networking",
+      "status": "Paid",
+      "buyer": "Corvid Logistics",
+      "providerId": "p-108",
+      "location": {
+        "city": "Phoenix",
+        "state": "AZ"
+      },
+      "schedule": {
+        "start": "2026-10-07T08:00:00-05:00",
+        "end": "2026-10-07T14:00:00-05:00"
+      },
+      "checkIn": "2026-10-07T08:04:00-05:00",
+      "checkOut": "2026-10-07T13:48:00-05:00",
+      "pay": {
+        "type": "Hourly",
+        "rate": 72,
+        "hours": 6
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": true
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": true
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": true
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": true
+        }
+      ],
+      "health": "On Track"
+    },
+    {
+      "id": 9631825,
+      "title": "Self-checkout lane install",
+      "typeOfWork": "Point of Sale",
+      "status": "Cancelled",
+      "buyer": "Northwind Retail",
+      "location": {
+        "city": "Plymouth",
+        "state": "MN"
+      },
+      "schedule": {
+        "start": "2026-10-29T08:00:00-05:00",
+        "end": "2026-10-29T16:00:00-05:00"
+      },
+      "pay": {
+        "type": "PerDevice",
+        "rate": 60,
+        "devices": 4
+      },
+      "tasks": [
+        {
+          "id": "t1",
+          "group": "Prep",
+          "title": "Set start time",
+          "done": false
+        },
+        {
+          "id": "t2",
+          "group": "On Site",
+          "title": "Check in",
+          "done": false
+        },
+        {
+          "id": "t3",
+          "group": "On Site",
+          "title": "Check out",
+          "done": false
+        },
+        {
+          "id": "t5",
+          "group": "On Site",
+          "title": "Upload photos of installed equipment",
+          "done": false
+        },
+        {
+          "id": "t4",
+          "group": "Post",
+          "title": "Enter closeout notes",
+          "done": false
+        }
+      ],
+      "health": "On Track"
+    }
+  ]
+}
