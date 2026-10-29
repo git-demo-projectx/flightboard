@@ -7,3 +7,8 @@ pay/vendor/
 pay/.phpunit.cache/
 web/node_modules/
 web/dist/
+
+# Coverage reports (CI uploads them to SonarQube Cloud)
+api/coverage.out
+web/coverage/
+pay/coverage/

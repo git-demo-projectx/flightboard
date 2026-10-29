@@ -31,8 +31,15 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - run: npm run test:coverage
+      # Sonar reads report paths from the repo root.
+      - run: sed -i 's#^SF:#SF:web/#' coverage/lcov.info
       - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-web
+          path: web/coverage/lcov.info
+          retention-days: 3
 
   api:
     runs-on: ubuntu-latest
@@ -49,7 +56,12 @@ jobs:
       - name: gofmt
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - run: go vet ./...
-      - run: go test -race ./...
+      - run: go test -race -coverprofile=coverage.out ./...
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-api
+          path: api/coverage.out
+          retention-days: 3
 
   pay:
     runs-on: ubuntu-latest
@@ -63,10 +75,41 @@ jobs:
         with:
           php-version: '8.3'
           tools: composer:v2
-          coverage: none
+          coverage: pcov
       - uses: actions/cache@v4
         with:
           path: pay/vendor
           key: composer-${{ runner.os }}-${{ hashFiles('pay/composer.lock') }}
       - run: composer install --no-interaction --no-progress
-      - run: vendor/bin/phpunit
+      - run: vendor/bin/phpunit --coverage-clover coverage/clover.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-pay
+          path: pay/coverage/clover.xml
+          retention-days: 3
+
+  # SonarQube Cloud analysis with the three coverage reports. The job fails when
+  # the quality gate fails (sonar.qualitygate.wait in sonar-project.properties).
+  sonar:
+    needs: [web, api, pay]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-web
+          path: web/coverage
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-api
+          path: api
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-pay
+          path: pay/coverage
+      - uses: SonarSource/sonarqube-scan-action@v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
