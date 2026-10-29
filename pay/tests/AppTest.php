@@ -30,6 +30,102 @@ final class AppTest extends TestCase
         ], $body);
     }
 
+    public function testQuoteAcceptsBodyAtSizeLimit(): void
+    {
+        $request = '{"type":"Fixed","rate":180,"note":"' . str_repeat('a', 65499) . '"}';
+        self::assertSame(65536, strlen($request));
+
+        [$status, $body] = (new App())->handle('POST', '/quote', $request);
+
+        self::assertSame(200, $status);
+        self::assertSame(180.0, $body['total']);
+    }
+
+    public static function oversizedBodies(): array
+    {
+        return [
+            'quote' => ['/quote', '{"type":"Fixed","rate":180,"note":"' . str_repeat('a', 65500) . '"}'],
+            'quotes' => ['/quotes', '{"items":[],"note":"' . str_repeat('a', 65515) . '"}'],
+        ];
+    }
+
+    #[DataProvider('oversizedBodies')]
+    public function testRejectsOversizedBody(string $path, string $request): void
+    {
+        self::assertSame(65537, strlen($request));
+        self::assertSame(
+            [413, ['error' => 'request body must not exceed 65536 bytes']],
+            (new App())->handle('POST', $path, $request),
+        );
+    }
+
+    public static function quoteRoutes(): array
+    {
+        return [
+            'quote' => ['/quote'],
+            'quotes' => ['/quotes'],
+        ];
+    }
+
+    #[DataProvider('quoteRoutes')]
+    public function testRejectsDeeplyNestedJson(string $path): void
+    {
+        $request = str_repeat('[', 100) . str_repeat(']', 100);
+
+        self::assertSame(
+            [400, ['error' => 'JSON body is nested too deeply']],
+            (new App())->handle('POST', $path, $request),
+        );
+    }
+
+    #[DataProvider('quoteRoutes')]
+    public function testSizeCheckPrecedesDecoding(string $path): void
+    {
+        self::assertSame(
+            [413, ['error' => 'request body must not exceed 65536 bytes']],
+            (new App())->handle('POST', $path, str_repeat('[', 70000)),
+        );
+    }
+
+    #[DataProvider('quoteRoutes')]
+    public function testInvalidJsonResponsesArePreserved(string $path): void
+    {
+        foreach (['{oops', 'null', '5', 'true', '"text"'] as $request) {
+            self::assertSame(
+                [400, ['error' => 'invalid JSON body']],
+                (new App())->handle('POST', $path, $request),
+            );
+        }
+    }
+
+    public function testQuoteAcceptsModerateNesting(): void
+    {
+        [$status, $body] = (new App())->handle(
+            'POST',
+            '/quote',
+            '{"type":"Fixed","rate":180,"note":[[[[[[[[[[1]]]]]]]]]]}',
+        );
+
+        self::assertSame(200, $status);
+        self::assertSame(180.0, $body['total']);
+    }
+
+    public function testHealthIgnoresLargeBody(): void
+    {
+        self::assertSame(
+            [200, ['status' => 'ok']],
+            (new App())->handle('GET', '/health', str_repeat('a', 70000)),
+        );
+    }
+
+    public function testUnknownRouteIgnoresLargeBody(): void
+    {
+        self::assertSame(
+            [404, ['error' => 'not found']],
+            (new App())->handle('POST', '/nope', str_repeat('a', 70000)),
+        );
+    }
+
     public function testQuoteWithTwoExpenses(): void
     {
         [$status, $body] = (new App())->handle('POST', '/quote', json_encode([

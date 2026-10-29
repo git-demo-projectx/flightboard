@@ -89,6 +89,7 @@ The count includes all expenses; cents are summed by expense status. All fields 
 Errors use the shape `{"error":"message"}`.
 The API returns 400 for bad input, 404 for an unknown id, and 409 for a change the lifecycle does not allow.
 The pay service returns 422 for a pay type it cannot compute yet.
+The pay service returns 413 when a request body is larger than 65536 bytes, and 400 when JSON nests too deeply.
 
 ## Conventions
 

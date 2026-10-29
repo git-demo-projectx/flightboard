@@ -14,6 +14,9 @@ namespace Flightboard\Pay;
  */
 final class App
 {
+    public const MAX_BODY_BYTES = 65536;
+    private const MAX_JSON_DEPTH = 32;
+
     public function __construct(private readonly PayCalculator $calculator = new PayCalculator())
     {
     }
@@ -34,13 +37,20 @@ final class App
     /** @return array{0: int, 1: array<string, mixed>} */
     private function quotes(string $body): array
     {
-        $decoded = json_decode($body, true);
+        if (strlen($body) > self::MAX_BODY_BYTES) {
+            return [413, ['error' => 'request body must not exceed ' . self::MAX_BODY_BYTES . ' bytes']];
+        }
+
+        $decoded = json_decode($body, true, self::MAX_JSON_DEPTH);
+        if (json_last_error() === JSON_ERROR_DEPTH) {
+            return [400, ['error' => 'JSON body is nested too deeply']];
+        }
         if (!is_array($decoded)) {
             return [400, ['error' => 'invalid JSON body']];
         }
 
         // Associative decoding loses the distinction between objects and lists.
-        $items = json_decode($body)->items ?? null;
+        $items = json_decode($body, false, self::MAX_JSON_DEPTH)->items ?? null;
         if (is_object($items)) {
             $decoded['items'] = $items;
         }
@@ -57,13 +67,20 @@ final class App
     /** @return array{0: int, 1: array<string, mixed>} */
     private function quote(string $body): array
     {
-        $pay = json_decode($body, true);
+        if (strlen($body) > self::MAX_BODY_BYTES) {
+            return [413, ['error' => 'request body must not exceed ' . self::MAX_BODY_BYTES . ' bytes']];
+        }
+
+        $pay = json_decode($body, true, self::MAX_JSON_DEPTH);
+        if (json_last_error() === JSON_ERROR_DEPTH) {
+            return [400, ['error' => 'JSON body is nested too deeply']];
+        }
         if (!is_array($pay)) {
             return [400, ['error' => 'invalid JSON body']];
         }
 
         // Associative decoding loses the distinction between objects and lists.
-        $expenses = json_decode($body)->expenses ?? null;
+        $expenses = json_decode($body, false, self::MAX_JSON_DEPTH)->expenses ?? null;
         if (is_object($expenses)) {
             $pay['expenses'] = $expenses;
         }
