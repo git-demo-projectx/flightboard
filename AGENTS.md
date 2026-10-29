@@ -65,7 +65,7 @@ A change to a status or a pay type usually touches the Go model, `web/src/api/ty
 |---|---|
 | `GET /api/health` | Health check |
 | `GET /api/work-orders?status=&providerId=&typeOfWork=` | List work orders, newest first, with `provider` expanded and `expenseTotals`; optional `status` filters by lifecycle status (e.g. `Draft` or `Work%20Done`), unknown statuses return 400; optional `typeOfWork` keeps one type of work, ignoring case |
-| `POST /api/work-orders` | Create a work order as `Draft` or `Published` |
+| `POST /api/work-orders` | Create a work order as `Draft` or `Published`. Maximum lengths: title 120 characters, type of work 60, buyer 80, city 60. State is empty or two ASCII letters. At most 30 tasks; each needs a unique id, a group of `Prep`, `On Site` or `Post`, and a title of 1 to 120 characters. |
 | `GET /api/work-orders/summary` | Total work orders, counts for every status, and `pendingExpenses`: the number of work orders with at least one `Pending` expense |
 | `GET /api/work-orders/{id}` | One work order with `expenseTotals` |
 | `GET /api/work-orders/week?start=&providerId=` | One week of scheduled work orders by day, from `start` (YYYY-MM-DD) for 7 days, with `total` and `unassigned` counts. Leaves out Cancelled and unscheduled work orders. |

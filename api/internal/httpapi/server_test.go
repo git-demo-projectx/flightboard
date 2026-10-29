@@ -388,9 +388,9 @@ func TestWorkOrderProgressErrors(t *testing.T) {
 func TestWorkOrderProgressAfterTaskUpdate(t *testing.T) {
 	s := newTestServer(t)
 	body := `{"title":"Task progress","status":"Draft","tasks":[
-		{"id":"a","group":"On Site","done":true},
-		{"id":"b","group":"On Site","done":false},
-		{"id":"c","group":"On Site","done":false}]}`
+		{"id":"a","group":"On Site","title":"Survey","done":true},
+		{"id":"b","group":"On Site","title":"Install","done":false},
+		{"id":"c","group":"On Site","title":"Test","done":false}]}`
 	rec := do(t, s, "POST", "/api/work-orders", body)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("create code = %d body %s", rec.Code, rec.Body)
@@ -560,6 +560,61 @@ func TestCreateWorkOrder(t *testing.T) {
 	rec = do(t, s, "POST", "/api/work-orders", `{not json`)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("bad json code = %d", rec.Code)
+	}
+}
+
+func TestCreateWorkOrderChecksTextAndTasks(t *testing.T) {
+	s := newTestServer(t)
+	for _, tt := range []struct {
+		name string
+		body string
+		err  string
+	}{
+		{
+			name: "long draft title",
+			body: `{"title":"` + strings.Repeat("a", 121) + `","status":"Draft"}`,
+			err:  "invalid work order: title must not exceed 120 characters",
+		},
+		{
+			name: "duplicate task id",
+			body: `{"title":"Survey","status":"Draft","tasks":[{"id":"t1","group":"Prep","title":"Survey"},{"id":"t1","group":"Post","title":"Photos"}]}`,
+			err:  `invalid work order: duplicate task id "t1"`,
+		},
+		{
+			name: "unknown task group",
+			body: `{"title":"Survey","status":"Draft","tasks":[{"id":"t1","group":"Later","title":"Survey"}]}`,
+			err:  `invalid work order: task "t1" has unknown group "Later"`,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := do(t, s, "POST", "/api/work-orders", tt.body)
+			if rec.Code != http.StatusBadRequest {
+				t.Fatalf("code = %d body %s", rec.Code, rec.Body)
+			}
+			if got := decode[map[string]string](t, rec); !maps.Equal(got, map[string]string{"error": tt.err}) {
+				t.Errorf("error body = %v, want error %q", got, tt.err)
+			}
+		})
+	}
+	rec := do(t, s, "GET", "/api/work-orders", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("list code = %d body %s", rec.Code, rec.Body)
+	}
+	if list := decode[[]woJSON](t, rec); len(list) != 25 {
+		t.Fatalf("count = %d, want 25", len(list))
+	}
+	body := `{"title":"Survey","status":"Draft","tasks":[{"id":"t1","group":"Prep","title":"Survey"},{"id":"t2","group":"Post","title":"Photos"}]}`
+	rec = do(t, s, "POST", "/api/work-orders", body)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create code = %d body %s", rec.Code, rec.Body)
+	}
+	created := decode[workorder.WorkOrder](t, rec)
+	want := []workorder.Task{
+		{ID: "t1", Group: workorder.TaskPrep, Title: "Survey"},
+		{ID: "t2", Group: workorder.TaskPost, Title: "Photos"},
+	}
+	if !slices.Equal(created.Tasks, want) {
+		t.Errorf("tasks = %+v, want %+v", created.Tasks, want)
 	}
 }
 

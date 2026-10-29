@@ -251,14 +251,61 @@ func ValidatePay(p Pay) error {
 	return nil
 }
 
-// ValidateNew checks a work order before it is created. Drafts need only
-// a title. Published work orders need schedule, location and pay.
+// ValidateNew checks a work order before it is created. Drafts require only
+// a title, but all supplied text and tasks must be valid. Published work
+// orders also need schedule, location and pay.
 func ValidateNew(w WorkOrder) error {
 	if strings.TrimSpace(w.Title) == "" {
 		return invalid("title is required")
 	}
 	if w.Status != StatusDraft && w.Status != StatusPublished {
 		return invalid("new work orders must be Draft or Published")
+	}
+	if utf8.RuneCountInString(w.Title) > 120 {
+		return invalid("title must not exceed 120 characters")
+	}
+	if utf8.RuneCountInString(w.TypeOfWork) > 60 {
+		return invalid("type of work must not exceed 60 characters")
+	}
+	if utf8.RuneCountInString(w.Buyer) > 80 {
+		return invalid("buyer must not exceed 80 characters")
+	}
+	if utf8.RuneCountInString(w.Location.City) > 60 {
+		return invalid("city must not exceed 60 characters")
+	}
+	if w.Location.State != "" {
+		if len(w.Location.State) != 2 {
+			return invalid("state must be a two-letter code")
+		}
+		for _, c := range w.Location.State {
+			if !(c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') {
+				return invalid("state must be a two-letter code")
+			}
+		}
+	}
+	if len(w.Tasks) > 30 {
+		return invalid("a work order can have at most 30 tasks")
+	}
+	seen := make(map[string]bool, len(w.Tasks))
+	for i, task := range w.Tasks {
+		if strings.TrimSpace(task.ID) == "" {
+			return invalid(fmt.Sprintf("task %d needs an id", i+1))
+		}
+		if seen[task.ID] {
+			return invalid(fmt.Sprintf("duplicate task id %q", task.ID))
+		}
+		seen[task.ID] = true
+		switch task.Group {
+		case TaskPrep, TaskOnSite, TaskPost:
+		default:
+			return invalid(fmt.Sprintf("task %q has unknown group %q", task.ID, task.Group))
+		}
+		if strings.TrimSpace(task.Title) == "" {
+			return invalid(fmt.Sprintf("task %q needs a title", task.ID))
+		}
+		if utf8.RuneCountInString(task.Title) > 120 {
+			return invalid(fmt.Sprintf("task %q title must not exceed 120 characters", task.ID))
+		}
 	}
 	if w.Status == StatusDraft {
 		return nil
