@@ -39,6 +39,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/work-orders/{id}/expenses", s.workOrderExpenses)
 	s.mux.HandleFunc("POST /api/work-orders/{id}/expenses", s.createExpense)
 	s.mux.HandleFunc("POST /api/work-orders/{id}/status", s.setStatus)
+	s.mux.HandleFunc("POST /api/work-orders/{id}/assign", s.assignProvider)
 	s.mux.HandleFunc("POST /api/work-orders/{id}/check-in", s.checkIn)
 	s.mux.HandleFunc("POST /api/work-orders/{id}/check-out", s.checkOut)
 	s.mux.HandleFunc("POST /api/work-orders/pay-run", s.payRun)

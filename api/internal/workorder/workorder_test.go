@@ -8,6 +8,47 @@ import (
 	"time"
 )
 
+func TestScheduleOverlaps(t *testing.T) {
+	window := func(start, end string) Schedule {
+		t.Helper()
+		from, err := time.Parse(time.RFC3339, start)
+		if err != nil {
+			t.Fatal(err)
+		}
+		to, err := time.Parse(time.RFC3339, end)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return Schedule{Start: from, End: to}
+	}
+	base := window("2026-10-22T10:00:00-05:00", "2026-10-22T11:00:00-05:00")
+	for _, tt := range []struct {
+		name string
+		s, o Schedule
+		want bool
+	}{
+		{"same window", base, base, true},
+		{"overlaps the start", base, window("2026-10-22T09:30:00-05:00", "2026-10-22T10:30:00-05:00"), true},
+		{"overlaps the end", base, window("2026-10-22T10:30:00-05:00", "2026-10-22T11:30:00-05:00"), true},
+		{"inside the other", base, window("2026-10-22T09:00:00-05:00", "2026-10-22T12:00:00-05:00"), true},
+		{"contains the other", base, window("2026-10-22T10:15:00-05:00", "2026-10-22T10:45:00-05:00"), true},
+		{"ends when the other starts", base, window("2026-10-22T11:00:00-05:00", "2026-10-22T12:00:00-05:00"), false},
+		{"starts when the other ends", base, window("2026-10-22T09:00:00-05:00", "2026-10-22T10:00:00-05:00"), false},
+		{"before", base, window("2026-10-22T12:00:00-05:00", "2026-10-22T13:00:00-05:00"), false},
+		{"after", base, window("2026-10-22T08:00:00-05:00", "2026-10-22T09:00:00-05:00"), false},
+		{"different zones", base, window("2026-10-22T15:30:00Z", "2026-10-22T16:30:00Z"), true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.s.Overlaps(tt.o); got != tt.want {
+				t.Errorf("s.Overlaps(o) = %v, want %v", got, tt.want)
+			}
+			if got := tt.o.Overlaps(tt.s); got != tt.want {
+				t.Errorf("o.Overlaps(s) = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestAcceptsExpenses(t *testing.T) {
 	for _, status := range Statuses {
 		t.Run(string(status), func(t *testing.T) {

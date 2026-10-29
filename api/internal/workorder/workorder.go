@@ -91,6 +91,11 @@ type Schedule struct {
 	End   time.Time `json:"end"`
 }
 
+// Overlaps reports whether service windows overlap, excluding touching endpoints.
+func (s Schedule) Overlaps(o Schedule) bool {
+	return s.Start.Before(o.End) && o.Start.Before(s.End)
+}
+
 // Task is one step the provider completes.
 type Task struct {
 	ID    string    `json:"id"`
