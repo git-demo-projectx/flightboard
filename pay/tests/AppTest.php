@@ -186,6 +186,14 @@ final class AppTest extends TestCase
         ], $body);
     }
 
+    public function testQuotesWithUnsupportedPayType(): void
+    {
+        self::assertSame(
+            [422, ['error' => 'item 1: Blended pay is not supported yet']],
+            (new App())->handle('POST', '/quotes', '{"items":[{"id":9631821,"pay":{"type":"Blended","rate":10}}]}'),
+        );
+    }
+
     #[DataProvider('batchApprovedExpenses')]
     public function testQuotesWithApprovedExpenses(array $pay): void
     {

@@ -7,6 +7,7 @@ namespace Flightboard\Pay\Tests;
 use Flightboard\Pay\BatchQuoter;
 use Flightboard\Pay\InvalidPay;
 use Flightboard\Pay\PayCalculator;
+use Flightboard\Pay\UnsupportedPayType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -80,6 +81,17 @@ final class BatchQuoterTest extends TestCase
         self::assertSame(100.0, $quote['total']);
     }
 
+    public function testPrefixesUnsupportedPayType(): void
+    {
+        $this->expectException(UnsupportedPayType::class);
+        $this->expectExceptionMessage('item 2: Blended pay is not supported yet');
+
+        (new BatchQuoter(new PayCalculator()))->quote([
+            ['id' => 1, 'pay' => ['type' => 'Fixed', 'rate' => 140]],
+            ['id' => 2, 'pay' => ['type' => 'Blended', 'rate' => 10]],
+        ]);
+    }
+
     #[DataProvider('invalidItems')]
     public function testRejectsInvalidItems(mixed $items, string $message): void
     {
@@ -112,11 +124,13 @@ final class BatchQuoterTest extends TestCase
             'float id' => [[array_replace($item, ['id' => 1.0])], $idError],
             'boolean id' => [[array_replace($item, ['id' => true])], $idError],
             'duplicate before pay' => [[$item, ['id' => 1]], 'item 2: duplicate id 1'],
+            'duplicate before expenses' => [[$item, ['id' => 1, 'pay' => ['type' => 'Fixed', 'rate' => 140], 'approvedExpenseCents' => -1]], 'item 2: duplicate id 1'],
             'missing pay' => [[['id' => 1]], 'item 1: pay must be an object'],
             'string pay before expenses' => [[['id' => 1, 'pay' => 'x', 'approvedExpenseCents' => -1]], 'item 1: pay must be an object'],
             'null expenses' => [[array_replace($item, ['approvedExpenseCents' => null])], $expenseError],
             'negative expenses' => [[array_replace($item, ['approvedExpenseCents' => -1])], $expenseError],
             'fractional expenses' => [[array_replace($item, ['approvedExpenseCents' => 12.5])], $expenseError],
+            'whole float expenses' => [[array_replace($item, ['approvedExpenseCents' => 0.0])], $expenseError],
             'string expenses' => [[array_replace($item, ['approvedExpenseCents' => '12'])], $expenseError],
             'boolean expenses' => [[array_replace($item, ['approvedExpenseCents' => true])], $expenseError],
             'expenses before calculator' => [[['id' => 1, 'pay' => [], 'approvedExpenseCents' => -1]], $expenseError],
