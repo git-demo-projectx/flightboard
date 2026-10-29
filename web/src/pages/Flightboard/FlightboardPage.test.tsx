@@ -28,6 +28,13 @@ beforeEach(() => {
 })
 
 describe('FlightboardPage', () => {
+  it('links to the Approvals page', async () => {
+    renderAt(<FlightboardPage />)
+    await screen.findByText('Fix kiosk')
+
+    expect(screen.getByRole('link', { name: 'Approvals' })).toHaveAttribute('href', '/work-orders/approvals')
+  })
+
   it('links to the Pay run page', async () => {
     renderAt(<FlightboardPage />)
     await screen.findByText('Fix kiosk')

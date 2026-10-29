@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box'
 import { Outlet, Route, Routes } from 'react-router-dom'
 import { TopBar } from './components/TopBar'
+import { ApprovalsPage } from './pages/Approvals/ApprovalsPage'
 import { FlightboardPage } from './pages/Flightboard/FlightboardPage'
 import { NewWorkOrderPage } from './pages/NewWorkOrder/NewWorkOrderPage'
 import { PayRunPage } from './pages/PayRun/PayRunPage'
@@ -23,6 +24,7 @@ export function AppRoutes() {
         <Route index element={<FlightboardPage />} />
         <Route path="work-orders/new" element={<NewWorkOrderPage />} />
         <Route path="work-orders/pay-run" element={<PayRunPage />} />
+        <Route path="work-orders/approvals" element={<ApprovalsPage />} />
         <Route path="work-orders/:id" element={<WorkOrderDetailPage />} />
         <Route path="schedule" element={<SchedulePage />} />
       </Route>

@@ -42,6 +42,9 @@ export function FlightboardPage() {
         title="Flightboard"
         actions={
           <>
+            <Button variant="outlined" component={RouterLink} to="/work-orders/approvals">
+              Approvals
+            </Button>
             <Button variant="outlined" component={RouterLink} to="/work-orders/pay-run">
               Pay run
             </Button>
