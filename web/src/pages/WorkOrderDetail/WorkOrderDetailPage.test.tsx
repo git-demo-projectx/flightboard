@@ -7,7 +7,7 @@ import { renderAt } from '../../test/render'
 import { WorkOrderDetailPage } from './WorkOrderDetailPage'
 
 vi.mock('../../api/client', () => ({
-  api: { getWorkOrder: vi.fn(), setTaskDone: vi.fn(), setStatus: vi.fn() },
+  api: { getWorkOrder: vi.fn(), setTaskDone: vi.fn(), setStatus: vi.fn(), listExpenses: vi.fn() },
   payApi: { quote: vi.fn() },
 }))
 
@@ -19,6 +19,7 @@ function renderDetail(id = wo.id) {
 
 beforeEach(() => {
   vi.mocked(api.getWorkOrder).mockResolvedValue(wo)
+  vi.mocked(api.listExpenses).mockResolvedValue([])
   vi.mocked(payApi.quote).mockResolvedValue({
     type: 'Hourly',
     lines: [{ label: 'Labor - Hourly pay (4 hr x $65.00)', amount: 260 }],
@@ -27,6 +28,13 @@ beforeEach(() => {
 })
 
 describe('WorkOrderDetailPage', () => {
+  it('shows the Expenses panel', async () => {
+    renderDetail()
+
+    const region = await screen.findByRole('region', { name: 'Expenses' })
+    expect(await within(region).findByText('No expenses yet.')).toBeInTheDocument()
+  })
+
   it('shows the header, provider and score badge', async () => {
     renderDetail()
 

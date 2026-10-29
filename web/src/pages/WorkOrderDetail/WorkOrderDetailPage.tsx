@@ -14,6 +14,7 @@ import { HealthChip, ScoreBadge, StatusChip } from '../../components/Chips'
 import { PageHeader } from '../../components/PageHeader'
 import { formatSchedule, formatTime } from '../../lib/format'
 import { colors } from '../../theme'
+import { ExpenseList } from './ExpenseList'
 import { PayBreakdown } from './PayBreakdown'
 import { TaskList } from './TaskList'
 
@@ -148,9 +149,14 @@ export function WorkOrderDetailPage() {
             <TaskList tasks={wo.tasks} disabled={wo.status === 'Cancelled'} onToggle={onToggle} />
           </Panel>
         </Box>
-        <Panel title="Pay">
-          <PayBreakdown pay={wo.pay} />
-        </Panel>
+        <Box sx={{ display: 'grid', gap: 2 }}>
+          <Panel title="Pay">
+            <PayBreakdown pay={wo.pay} />
+          </Panel>
+          <Panel title="Expenses">
+            <ExpenseList workOrder={wo} />
+          </Panel>
+        </Box>
       </Box>
     </>
   )

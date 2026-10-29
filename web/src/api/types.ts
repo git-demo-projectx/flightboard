@@ -38,19 +38,17 @@ export interface Pay {
   devices?: number
 }
 
-export type ExpenseCategory = 'Travel' | 'Materials' | 'Other'
+export type ExpenseCategory = 'Parts' | 'Mileage' | 'Tools' | 'Other'
 export type ExpenseStatus = 'Pending' | 'Approved' | 'Rejected'
 
 export interface Expense {
   id: string
-  workOrderId: number
   category: ExpenseCategory
   description: string
   amountCents: number
   status: ExpenseStatus
   createdAt: string
-  reviewedAt?: string
-  rejectionReason?: string
+  reason?: string
 }
 
 export interface ExpenseTotals {

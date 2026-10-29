@@ -6,8 +6,7 @@ import { makeWorkOrder } from '../test/fixtures'
 const workOrder = makeWorkOrder()
 const expense: Expense = {
   id: 'e1',
-  workOrderId: workOrder.id,
-  category: 'Materials',
+  category: 'Parts',
   description: 'Replacement cable',
   amountCents: 1250,
   status: 'Pending',
@@ -67,7 +66,7 @@ describe('expense API calls', () => {
       path: `${expensePath}/${expense.id}/reject`,
       method: 'POST',
       body: { reason: 'Receipt missing' },
-      response: { ...expense, status: 'Rejected', rejectionReason: 'Receipt missing' },
+      response: { ...expense, status: 'Rejected', reason: 'Receipt missing' },
     },
   ]
 

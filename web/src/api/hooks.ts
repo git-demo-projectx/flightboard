@@ -59,3 +59,7 @@ export function usePayQuote(pay: Pay) {
 export function useNearbyProviders(workOrderId: number) {
   return useAsync(() => api.nearbyProviders(workOrderId), `nearby-providers-${workOrderId}`)
 }
+
+export function useExpenses(workOrderId: number) {
+  return useAsync(() => api.listExpenses(workOrderId), `expenses-${workOrderId}`)
+}

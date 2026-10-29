@@ -2,8 +2,8 @@ import Chip from '@mui/material/Chip'
 import CheckIcon from '@mui/icons-material/Check'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import type { Health, Provider, Status } from '../api/types'
-import { healthChip, statusChip, type ChipStyle } from '../lib/status'
+import type { ExpenseStatus, Health, Provider, Status } from '../api/types'
+import { expenseStatusChip, healthChip, statusChip, type ChipStyle } from '../lib/status'
 import { scoreLabel } from '../lib/score'
 import { colors } from '../theme'
 
@@ -18,6 +18,11 @@ function styleOf(c: ChipStyle) {
 
 export function StatusChip({ status }: { status: Status }) {
   const c = statusChip(status)
+  return <Chip size="small" label={c.label} sx={styleOf(c)} />
+}
+
+export function ExpenseStatusChip({ status }: { status: ExpenseStatus }) {
+  const c = expenseStatusChip(status)
   return <Chip size="small" label={c.label} sx={styleOf(c)} />
 }
 

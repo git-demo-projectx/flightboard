@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { formatDuration, formatMoney, formatPay, minutesBetween } from './format'
+import { formatCents, formatDuration, formatMoney, formatPay, minutesBetween } from './format'
 import { scoreLabel } from './score'
+
+describe('formatCents', () => {
+  it.each([
+    [2400, '$24.00'],
+    [5, '$0.05'],
+    [0, '$0.00'],
+    [123456, '$1,234.56'],
+  ])('formats %i cents as %s', (cents, want) => {
+    expect(formatCents(cents)).toBe(want)
+  })
+})
 
 describe('formatPay', () => {
   it.each([

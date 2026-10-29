@@ -1,4 +1,4 @@
-import type { Health, Status } from '../api/types'
+import type { ExpenseStatus, Health, Status } from '../api/types'
 import { colors } from '../theme'
 
 export interface ChipStyle {
@@ -6,6 +6,17 @@ export interface ChipStyle {
   bg: string
   fg: string
   border?: string
+}
+
+export function expenseStatusChip(status: ExpenseStatus): ChipStyle {
+  switch (status) {
+    case 'Pending':
+      return { label: 'Pending', bg: colors.reviewBg, fg: colors.reviewText }
+    case 'Approved':
+      return { label: 'Approved', bg: '#DDF3E8', fg: colors.success }
+    case 'Rejected':
+      return { label: 'Rejected', bg: colors.alertBg, fg: colors.alertText }
+  }
 }
 
 /** statusChip returns the label and colours for a work order status chip. */
