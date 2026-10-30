@@ -38,6 +38,18 @@ export interface Pay {
   devices?: number
 }
 
+export type AdjustmentKind = 'Bonus' | 'Deduction'
+
+export interface Adjustment {
+  id: string
+  kind: AdjustmentKind
+  reason: string
+  amountCents: number
+  createdAt: string
+}
+
+export type NewAdjustment = Pick<Adjustment, 'kind' | 'reason' | 'amountCents'>
+
 export type ExpenseCategory = 'Travel' | 'Materials' | 'Other'
 export type ExpenseStatus = 'Pending' | 'Approved' | 'Rejected'
 

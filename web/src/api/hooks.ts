@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, payApi } from './client'
-import type { Pay, PayQuote, WorkOrder, WorkOrderWeek } from './types'
+import type { Adjustment, Pay, PayQuote, WorkOrder, WorkOrderWeek } from './types'
 
 export interface AsyncState<T> {
   data: T | null
@@ -52,8 +52,11 @@ export function useWeek(start: string, providerId?: string) {
   return useAsync<WorkOrderWeek>(() => api.getWeek(start, providerId), `week-${start}-${providerId ?? ''}`)
 }
 
-export function usePayQuote(pay: Pay) {
-  return useAsync<PayQuote>(() => payApi.quote(pay), JSON.stringify(pay))
+export function usePayQuote(pay: Pay, adjustments?: Adjustment[]) {
+  return useAsync<PayQuote>(
+    () => adjustments === undefined ? payApi.quote(pay) : payApi.quote(pay, undefined, adjustments),
+    JSON.stringify({ pay, adjustments }),
+  )
 }
 
 export function useNearbyProviders(workOrderId: number) {

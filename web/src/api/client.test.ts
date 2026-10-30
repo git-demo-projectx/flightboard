@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api, ApiError, payApi } from './client'
-import type { Expense, PayQuote, PayRunQuote, PayRunQuoteItem, PayRunResult, WorkOrderWeek } from './types'
+import type { Adjustment, Expense, PayQuote, PayRunQuote, PayRunQuoteItem, PayRunResult, WorkOrderWeek } from './types'
 import { makeWorkOrder } from '../test/fixtures'
 
 const workOrder = makeWorkOrder()
@@ -25,6 +25,11 @@ const quote: PayQuote = {
 }
 const expensePath = `/api/work-orders/${workOrder.id}/expenses`
 const fetchMock = vi.fn<typeof fetch>()
+const adjustment: Adjustment = {
+  id: 'a1', kind: 'Bonus', reason: 'Weekend call-out', amountCents: 5000,
+  createdAt: '2026-10-29T21:00:00Z',
+}
+const newAdjustment = { kind: adjustment.kind, reason: adjustment.reason, amountCents: adjustment.amountCents }
 
 beforeEach(() => {
   fetchMock.mockReset()
@@ -99,6 +104,17 @@ describe('expense API calls', () => {
 })
 
 describe('pay quotes', () => {
+  it.each([undefined, [], [adjustment]])('sends only adjustment pay fields %j', async (adjustments) => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(quote)))
+
+    await expect(payApi.quote(workOrder.pay, [expense], adjustments)).resolves.toEqual(quote)
+
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith('/pay/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...workOrder.pay, expenses: [expense], adjustments: adjustments?.map(() => newAdjustment) }),
+    })
+  })
   it.each([undefined, [], [expense]])('sends optional expenses %j', async (expenses) => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify(quote)))
 
@@ -119,6 +135,34 @@ describe('pay quotes', () => {
     const result = payApi.quote(workOrder.pay, [expense])
     await expect(result).rejects.toBeInstanceOf(ApiError)
     await expect(result).rejects.toMatchObject({ status: 400, message: 'Invalid expense amount' })
+  })
+})
+
+describe('adjustment API calls', () => {
+  const path = `/api/work-orders/${workOrder.id}/adjustments`
+  const calls = [
+    { name: 'list', call: () => api.listAdjustments(workOrder.id), path, method: 'GET', body: undefined, response: [adjustment] },
+    { name: 'add', call: () => api.addAdjustment(workOrder.id, newAdjustment), path, method: 'POST', body: newAdjustment, response: adjustment },
+    { name: 'remove', call: () => api.removeAdjustment(workOrder.id, 'a/1'), path: `${path}/a%2F1`, method: 'DELETE', body: undefined, response: undefined },
+  ]
+
+  it.each(calls)('$name sends the expected method, path and body', async (test) => {
+    fetchMock.mockResolvedValue(test.response === undefined
+      ? new Response(null, { status: 204 })
+      : new Response(JSON.stringify(test.response)))
+
+    await expect(test.call()).resolves.toEqual(test.response)
+
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(test.path, {
+      ...(test.method === 'GET' ? {} : { method: test.method }),
+      ...(test.body ? { body: JSON.stringify(test.body) } : {}),
+      headers: { 'Content-Type': 'application/json' },
+    })
+  })
+
+  it.each(calls)('$name propagates the server error', async (test) => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ error: 'Adjustments locked' }), { status: 409 }))
+    await expect(test.call()).rejects.toMatchObject({ status: 409, message: 'Adjustments locked' })
   })
 })
 

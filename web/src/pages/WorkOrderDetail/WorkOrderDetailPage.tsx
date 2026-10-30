@@ -9,12 +9,13 @@ import { useState, type ReactNode } from 'react'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { api } from '../../api/client'
 import { useWorkOrder } from '../../api/hooks'
-import type { Status, Task, WorkOrder } from '../../api/types'
+import type { Adjustment, Status, Task, WorkOrder } from '../../api/types'
 import { HealthChip, ScoreBadge, StatusChip } from '../../components/Chips'
 import { PageHeader } from '../../components/PageHeader'
 import { formatSchedule, formatTime } from '../../lib/format'
 import { colors } from '../../theme'
 import { PayBreakdown } from './PayBreakdown'
+import { AdjustmentsPanel } from './AdjustmentsPanel'
 import { TaskList } from './TaskList'
 
 /** The main action the buyer can take in each status. */
@@ -73,6 +74,20 @@ function Overview({ wo }: { wo: WorkOrder }) {
       <Field label="Check in">{wo.checkIn ? formatTime(wo.checkIn) : '--'}</Field>
       <Field label="Check out">{wo.checkOut ? formatTime(wo.checkOut) : '--'}</Field>
     </Panel>
+  )
+}
+
+function PayPanels({ wo }: { wo: WorkOrder }) {
+  const [adjustments, setAdjustments] = useState<Adjustment[]>([])
+  return (
+    <Box sx={{ display: 'grid', gap: 2, minWidth: 0 }}>
+      <Panel title="Pay">
+        <PayBreakdown pay={wo.pay} adjustments={adjustments} />
+      </Panel>
+      <Panel title="Adjustments">
+        <AdjustmentsPanel wo={wo} onChange={setAdjustments} />
+      </Panel>
+    </Box>
   )
 }
 
@@ -148,9 +163,7 @@ export function WorkOrderDetailPage() {
             <TaskList tasks={wo.tasks} disabled={wo.status === 'Cancelled'} onToggle={onToggle} />
           </Panel>
         </Box>
-        <Panel title="Pay">
-          <PayBreakdown pay={wo.pay} />
-        </Panel>
+        <PayPanels key={wo.id} wo={wo} />
       </Box>
     </>
   )

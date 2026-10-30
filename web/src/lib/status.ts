@@ -8,6 +8,10 @@ export interface ChipStyle {
   border?: string
 }
 
+export function canAdjustPay(status: Status): boolean {
+  return status === 'Work Done' || status === 'Approved'
+}
+
 /** statusChip returns the label and colours for a work order status chip. */
 export function statusChip(status: Status): ChipStyle {
   switch (status) {
