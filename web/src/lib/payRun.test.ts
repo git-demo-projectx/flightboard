@@ -29,12 +29,13 @@ describe('payableWorkOrders', () => {
 })
 
 describe('toQuoteItems', () => {
-  it('maps pay and approved expenses for each work order in input order', () => {
+  it('maps pay, approved expenses and net adjustments for each work order in input order', () => {
     const list = [
       makeWorkOrder({
         id: 9631821,
         pay: { type: 'Fixed', rate: 140 },
         expenseTotals: { pendingCents: 0, approvedCents: 1800, rejectedCents: 0 },
+        adjustmentTotals: { count: 2, bonusCents: 5000, deductionCents: 1500 },
       }),
       makeWorkOrder({
         id: 9631822,
@@ -44,8 +45,8 @@ describe('toQuoteItems', () => {
     ]
 
     expect(toQuoteItems(list)).toEqual([
-      { id: 9631821, pay: { type: 'Fixed', rate: 140 }, approvedExpenseCents: 1800 },
-      { id: 9631822, pay: { type: 'Hourly', rate: 54, hours: 4 }, approvedExpenseCents: 0 },
+      { id: 9631821, pay: { type: 'Fixed', rate: 140 }, approvedExpenseCents: 1800, adjustmentCents: 3500 },
+      { id: 9631822, pay: { type: 'Hourly', rate: 54, hours: 4 }, approvedExpenseCents: 0, adjustmentCents: 0 },
     ])
   })
 
@@ -57,8 +58,8 @@ describe('toQuoteItems', () => {
 describe('selectedTotal', () => {
   const quote: PayRunQuote = {
     items: [
-      { id: 9631821, labor: 140, expenses: 0, total: 140 },
-      { id: 9631822, labor: 216, expenses: 0, total: 216 },
+      { id: 9631821, labor: 140, expenses: 0, adjustments: 0, total: 140 },
+      { id: 9631822, labor: 216, expenses: 0, adjustments: 0, total: 216 },
     ],
     count: 2,
     total: 356,
@@ -76,7 +77,7 @@ describe('selectedTotal', () => {
 
   it('rounds the sum to cents', () => {
     const fractionalQuote: PayRunQuote = {
-      items: [1, 2, 3].map((id) => ({ id, labor: 0.1, expenses: 0, total: 0.1 })),
+      items: [1, 2, 3].map((id) => ({ id, labor: 0.1, expenses: 0, adjustments: 0, total: 0.1 })),
       count: 3,
       total: 0.3,
     }
@@ -86,7 +87,7 @@ describe('selectedTotal', () => {
 
   it('uses line totals including expenses', () => {
     const expenseQuote: PayRunQuote = {
-      items: [{ id: 1, labor: 140, expenses: 18, total: 158 }],
+      items: [{ id: 1, labor: 140, expenses: 18, adjustments: 0, total: 158 }],
       count: 1,
       total: 158,
     }

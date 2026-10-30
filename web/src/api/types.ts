@@ -59,6 +59,12 @@ export interface ExpenseTotals {
   rejectedCents: number
 }
 
+export interface AdjustmentTotals {
+  count: number
+  bonusCents: number
+  deductionCents: number
+}
+
 export interface Task {
   id: string
   group: TaskGroup
@@ -90,6 +96,7 @@ export interface WorkOrder {
   paidAt?: string
   pay: Pay
   expenseTotals: ExpenseTotals
+  adjustmentTotals: AdjustmentTotals
   tasks: Task[]
   health: Health
 }
@@ -140,6 +147,7 @@ export interface PayRunQuoteItem {
   id: number
   pay: Pay
   approvedExpenseCents: number
+  adjustmentCents: number
 }
 
 /** One work order in a POST /pay/quotes response. */
@@ -147,6 +155,7 @@ export interface PayRunQuoteLine {
   id: number
   labor: number
   expenses: number
+  adjustments: number
   total: number
 }
 

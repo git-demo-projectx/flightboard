@@ -9,6 +9,7 @@ export function toQuoteItems(list: WorkOrder[]): PayRunQuoteItem[] {
     id: wo.id,
     pay: wo.pay,
     approvedExpenseCents: wo.expenseTotals.approvedCents,
+    adjustmentCents: wo.adjustmentTotals.bonusCents - wo.adjustmentTotals.deductionCents,
   }))
 }
 

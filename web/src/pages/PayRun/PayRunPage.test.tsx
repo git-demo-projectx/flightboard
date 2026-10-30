@@ -38,8 +38,8 @@ const phones = makeWorkOrder({
 const workDone = makeWorkOrder({ id: 9631820, title: 'Finished network work', status: 'Work Done' })
 const quote: PayRunQuote = {
   items: [
-    { id: printer.id, labor: 140, expenses: 0, total: 140 },
-    { id: phones.id, labor: 216, expenses: 0, total: 216 },
+    { id: printer.id, labor: 140, expenses: 0, adjustments: 0, total: 140 },
+    { id: phones.id, labor: 216, expenses: 0, adjustments: 0, total: 216 },
   ],
   count: 2,
   total: 356,
@@ -58,6 +58,42 @@ beforeEach(() => {
 })
 
 describe('PayRunPage', () => {
+  it('shows signed adjustments and includes them in the selected and confirmation totals', async () => {
+    vi.mocked(api.listWorkOrders).mockResolvedValue([
+      { ...printer, adjustmentTotals: { count: 1, bonusCents: 0, deductionCents: 1500 } },
+      { ...phones, adjustmentTotals: { count: 2, bonusCents: 5000, deductionCents: 1500 } },
+    ])
+    vi.mocked(payApi.quotes).mockResolvedValue({
+      items: [
+        { ...quote.items[0], adjustments: -15, total: 125 },
+        { ...quote.items[1], adjustments: 35, total: 251 },
+      ],
+      count: 2,
+      total: 376,
+    })
+    renderAt(<PayRunPage />)
+    await screen.findByText('$376.00')
+
+    expect(payApi.quotes).toHaveBeenCalledExactlyOnceWith([
+      { id: printer.id, pay: printer.pay, approvedExpenseCents: 0, adjustmentCents: -1500 },
+      { id: phones.id, pay: phones.pay, approvedExpenseCents: 0, adjustmentCents: 3500 },
+    ])
+    const table = within(screen.getByRole('table', { name: 'Approved work orders' }))
+    expect(table.getAllByRole('columnheader').slice(-4).map((cell) => cell.textContent))
+      .toEqual(['Labor', 'Expenses', 'Adjustments', 'Total'])
+    const rows = table.getAllByRole('row')
+    expect(within(rows[1]).getAllByRole('cell').slice(-4).map((cell) => cell.textContent))
+      .toEqual(['$140.00', '$0.00', '-$15.00', '$125.00'])
+    expect(within(rows[2]).getByText('+$35.00')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: `Select WO ${phones.id}` }))
+    expect(screen.queryByText('$376.00')).not.toBeInTheDocument()
+    expect(screen.getAllByText('$125.00')).toHaveLength(2)
+    await userEvent.click(screen.getByRole('button', { name: 'Pay 1 work order' }))
+    expect(within(screen.getByRole('dialog')).getAllByText('$125.00')).toHaveLength(2)
+    expect(payApi.quotes).toHaveBeenCalledTimes(1)
+  })
+
   it.each([50, 51])('enforces the payment limit with %i selected work orders', async (count) => {
     const orders = Array.from({ length: count }, (_, index) => makeWorkOrder({
       id: index + 1,
@@ -66,7 +102,7 @@ describe('PayRunPage', () => {
     }))
     vi.mocked(api.listWorkOrders).mockResolvedValueOnce(orders).mockResolvedValueOnce([])
     vi.mocked(payApi.quotes).mockResolvedValue({
-      items: orders.map(({ id }) => ({ id, labor: 1, expenses: 0, total: 1 })),
+      items: orders.map(({ id }) => ({ id, labor: 1, expenses: 0, adjustments: 0, total: 1 })),
       count,
       total: count,
     })
@@ -228,15 +264,15 @@ describe('PayRunPage', () => {
     await screen.findByText('$356.00')
 
     expect(payApi.quotes).toHaveBeenCalledExactlyOnceWith([
-      { id: 9631821, pay: { type: 'Fixed', rate: 140 }, approvedExpenseCents: 0 },
-      { id: 9631822, pay: { type: 'PerDevice', rate: 18, devices: 12 }, approvedExpenseCents: 0 },
+      { id: 9631821, pay: { type: 'Fixed', rate: 140 }, approvedExpenseCents: 0, adjustmentCents: 0 },
+      { id: 9631822, pay: { type: 'PerDevice', rate: 18, devices: 12 }, approvedExpenseCents: 0, adjustmentCents: 0 },
     ])
     const rows = within(screen.getByRole('table', { name: 'Approved work orders' })).getAllByRole('row')
     expect(rows).toHaveLength(3)
-    expect(within(rows[1]).getAllByRole('cell').slice(-3).map((cell) => cell.textContent))
-      .toEqual(['$140.00', '$0.00', '$140.00'])
-    expect(within(rows[2]).getAllByRole('cell').slice(-3).map((cell) => cell.textContent))
-      .toEqual(['$216.00', '$0.00', '$216.00'])
+    expect(within(rows[1]).getAllByRole('cell').slice(-4).map((cell) => cell.textContent))
+      .toEqual(['$140.00', '$0.00', '$0.00', '$140.00'])
+    expect(within(rows[2]).getAllByRole('cell').slice(-4).map((cell) => cell.textContent))
+      .toEqual(['$216.00', '$0.00', '$0.00', '$216.00'])
     expect(screen.queryByText(workDone.title)).not.toBeInTheDocument()
     expect(screen.getByText(printer.title)).toBeInTheDocument()
     expect(screen.getByText(phones.title)).toBeInTheDocument()
@@ -269,7 +305,7 @@ describe('PayRunPage', () => {
 
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select all' }))
     expect(screen.getByText('0 of 2 selected')).toBeInTheDocument()
-    expect(screen.getAllByText('$0.00')).toHaveLength(3)
+    expect(screen.getAllByText('$0.00')).toHaveLength(5)
     for (const checkbox of screen.getAllByRole('checkbox')) expect(checkbox).not.toBeChecked()
     expect(payApi.quotes).toHaveBeenCalledTimes(1)
   })
@@ -285,7 +321,7 @@ describe('PayRunPage', () => {
     vi.mocked(payApi.quotes).mockImplementation(async (items) => {
       if (items.length > 100) throw new Error('Batch too large')
       return {
-        items: items.map(({ id }) => ({ id, labor: 1, expenses: 0.25, total: 1.25 })),
+        items: items.map(({ id }) => ({ id, labor: 1, expenses: 0.25, adjustments: 0, total: 1.25 })),
         count: items.length,
         total: items.length * 1.25,
       }
@@ -299,8 +335,8 @@ describe('PayRunPage', () => {
     const rows = within(screen.getByRole('table')).getAllByRole('row')
     expect(rows).toHaveLength(102)
     for (const row of rows.slice(1)) {
-      expect(within(row).getAllByRole('cell').slice(-3).map((cell) => cell.textContent))
-        .toEqual(['$1.00', '$0.25', '$1.25'])
+      expect(within(row).getAllByRole('cell').slice(-4).map((cell) => cell.textContent))
+        .toEqual(['$1.00', '$0.25', '$0.00', '$1.25'])
     }
     expect(screen.getByText('101 of 101 selected')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select WO 101' }))
@@ -327,7 +363,7 @@ describe('PayRunPage', () => {
     }
     list.mockReturnValue({ ...state, data: [updatedPrinter, phones] })
     vi.mocked(payApi.quotes).mockResolvedValue({
-      items: [{ id: printer.id, labor: 150, expenses: 12.5, total: 162.5 }, quote.items[1]],
+      items: [{ id: printer.id, labor: 150, expenses: 12.5, adjustments: 0, total: 162.5 }, quote.items[1]],
       count: 2,
       total: 378.5,
     })
@@ -340,8 +376,8 @@ describe('PayRunPage', () => {
     expect(screen.getByRole('checkbox', { name: 'Select WO 9631822' })).not.toBeChecked()
     expect(payApi.quotes).toHaveBeenCalledTimes(2)
     expect(payApi.quotes).toHaveBeenLastCalledWith([
-      { id: printer.id, pay: updatedPrinter.pay, approvedExpenseCents: 1250 },
-      { id: phones.id, pay: phones.pay, approvedExpenseCents: 0 },
+      { id: printer.id, pay: updatedPrinter.pay, approvedExpenseCents: 1250, adjustmentCents: 0 },
+      { id: phones.id, pay: phones.pay, approvedExpenseCents: 0, adjustmentCents: 0 },
     ])
   })
 
@@ -351,7 +387,7 @@ describe('PayRunPage', () => {
     renderAt(<PayRunPage />)
 
     const table = await screen.findByRole('table', { name: 'Approved work orders' })
-    expect(within(table).getAllByText('...')).toHaveLength(6)
+    expect(within(table).getAllByText('...')).toHaveLength(8)
     resolve(quote)
     expect(await screen.findByText('$356.00')).toBeInTheDocument()
   })
@@ -382,7 +418,7 @@ describe('PayRunPage', () => {
     renderAt(<PayRunPage />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Pay service unavailable: pay down')
-    expect(within(screen.getByRole('table')).getAllByText('--')).toHaveLength(6)
+    expect(within(screen.getByRole('table')).getAllByText('--')).toHaveLength(8)
     expect(screen.queryByText('$356.00')).not.toBeInTheDocument()
   })
 
@@ -409,7 +445,7 @@ describe('PayRunPage', () => {
       { ...printer, schedule: undefined, expenseTotals: { pendingCents: 500, approvedCents: 1250, rejectedCents: 200 } },
     ])
     vi.mocked(payApi.quotes).mockResolvedValue({
-      items: [{ id: printer.id, labor: 140, expenses: 12.5, total: 152.5 }], count: 1, total: 152.5,
+      items: [{ id: printer.id, labor: 140, expenses: 12.5, adjustments: 0, total: 152.5 }], count: 1, total: 152.5,
     })
     renderAt(<PayRunPage />)
 
@@ -417,7 +453,7 @@ describe('PayRunPage', () => {
     expect(screen.getByText('Not scheduled')).toBeInTheDocument()
     expect(screen.getAllByText('$152.50')).toHaveLength(2)
     expect(payApi.quotes).toHaveBeenCalledExactlyOnceWith([
-      { id: printer.id, pay: printer.pay, approvedExpenseCents: 1250 },
+      { id: printer.id, pay: printer.pay, approvedExpenseCents: 1250, adjustmentCents: 0 },
     ])
   })
 

@@ -124,13 +124,13 @@ describe('pay quotes', () => {
 
 describe('pay run quotes', () => {
   const items: PayRunQuoteItem[] = [
-    { id: 9631821, pay: { type: 'Fixed', rate: 140 }, approvedExpenseCents: 0 },
-    { id: 9631822, pay: { type: 'PerDevice', rate: 18, devices: 12 }, approvedExpenseCents: 0 },
+    { id: 9631821, pay: { type: 'Fixed', rate: 140 }, approvedExpenseCents: 0, adjustmentCents: 0 },
+    { id: 9631822, pay: { type: 'PerDevice', rate: 18, devices: 12 }, approvedExpenseCents: 0, adjustmentCents: 0 },
   ]
   const response: PayRunQuote = {
     items: [
-      { id: 9631821, labor: 140, expenses: 0, total: 140 },
-      { id: 9631822, labor: 216, expenses: 0, total: 216 },
+      { id: 9631821, labor: 140, expenses: 0, adjustments: 0, total: 140 },
+      { id: 9631822, labor: 216, expenses: 0, adjustments: 0, total: 216 },
     ],
     count: 2,
     total: 356,

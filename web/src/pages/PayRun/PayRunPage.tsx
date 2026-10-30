@@ -23,7 +23,7 @@ import { api, payApi } from '../../api/client'
 import { useAsync, useWorkOrders } from '../../api/hooks'
 import type { PayRunQuote, PayRunQuoteItem, PayRunResult, WorkOrder } from '../../api/types'
 import { PageHeader } from '../../components/PageHeader'
-import { formatDate, formatMoney } from '../../lib/format'
+import { formatDate, formatMoney, formatSignedMoney } from '../../lib/format'
 import { payableWorkOrders, payButtonLabel, selectedTotal, toQuoteItems, workOrderCount } from '../../lib/payRun'
 import { colors } from '../../theme'
 
@@ -61,8 +61,8 @@ function PayRunTable({ payable, onPaid }: {
   const paymentDisabled = !selected.size || selectionTooLarge || loading || !!error || !quote || running
   const total = quote ? selectedTotal(quote, selected) : 0
   const selectedOrders = payable.filter((wo) => selected.has(wo.id))
-  const moneyText = (amount?: number) =>
-    loading ? '...' : error || amount === undefined ? '--' : formatMoney(amount)
+  const moneyText = (amount?: number, format = formatMoney) =>
+    loading ? '...' : error || amount === undefined ? '--' : format(amount)
 
   async function markAsPaid() {
     if (paymentDisabled) return
@@ -99,7 +99,7 @@ function PayRunTable({ payable, onPaid }: {
                 {['ID', 'Title', 'Provider', 'Schedule'].map((label) => (
                   <TableCell key={label}>{label}</TableCell>
                 ))}
-                {['Labor', 'Expenses', 'Total'].map((label) => (
+                {['Labor', 'Expenses', 'Adjustments', 'Total'].map((label) => (
                   <TableCell key={label} align="right">{label}</TableCell>
                 ))}
               </TableRow>
@@ -138,6 +138,7 @@ function PayRunTable({ payable, onPaid }: {
                     </TableCell>
                     <TableCell align="right">{moneyText(line?.labor)}</TableCell>
                     <TableCell align="right">{moneyText(line?.expenses)}</TableCell>
+                    <TableCell align="right">{moneyText(line?.adjustments, formatSignedMoney)}</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600 }}>{moneyText(line?.total)}</TableCell>
                   </TableRow>
                 )

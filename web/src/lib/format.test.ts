@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDuration, formatMoney, formatPay, minutesBetween } from './format'
+import { formatDuration, formatMoney, formatPay, formatSignedMoney, minutesBetween } from './format'
 import { scoreLabel } from './score'
 
 describe('formatPay', () => {
@@ -13,6 +13,15 @@ describe('formatPay', () => {
 })
 
 describe('money and time helpers', () => {
+  it.each([
+    [50, '+$50.00'],
+    [-15, '-$15.00'],
+    [0, '$0.00'],
+    [1234.5, '+$1,234.50'],
+  ])('formats signed dollars for %i', (amount, expected) => {
+    expect(formatSignedMoney(amount)).toBe(expected)
+  })
+
   it('formats dollars with cents and separators', () => {
     expect(formatMoney(1234.5)).toBe('$1,234.50')
   })

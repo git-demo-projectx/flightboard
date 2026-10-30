@@ -6,6 +6,10 @@ export function formatMoney(amount: number): string {
   return money.format(amount)
 }
 
+export function formatSignedMoney(amount: number): string {
+  return `${amount > 0 ? '+' : ''}${formatMoney(amount)}`
+}
+
 /** formatPay renders pay terms the way the Flightboard shows them, e.g. "$65.00 / hr (4)". */
 export function formatPay(pay: Pay): string {
   const rate = formatMoney(pay.rate)
