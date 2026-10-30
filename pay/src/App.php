@@ -9,7 +9,7 @@ namespace Flightboard\Pay;
  *
  * Routes:
  *   GET  /health  -> {"status":"ok"}
- *   POST /quote   -> a quote from PayCalculator::quote()
+ *   POST /quote   -> a pay quote with optional expenses and Bonus/Deduction adjustments
  *   POST /quotes  -> batch labor and approved expense totals
  */
 final class App
@@ -63,9 +63,14 @@ final class App
         }
 
         // Associative decoding loses the distinction between objects and lists.
-        $expenses = json_decode($body)->expenses ?? null;
+        $decoded = json_decode($body);
+        $expenses = $decoded->expenses ?? null;
         if (is_object($expenses)) {
             $pay['expenses'] = $expenses;
+        }
+        $adjustments = $decoded->adjustments ?? null;
+        if (is_object($adjustments)) {
+            $pay['adjustments'] = $adjustments;
         }
 
         try {

@@ -54,6 +54,55 @@ final class AppTest extends TestCase
         ], $body);
     }
 
+    public function testQuoteWithAdjustments(): void
+    {
+        [$status, $body] = (new App())->handle('POST', '/quote', json_encode([
+            'type' => 'Hourly',
+            'rate' => 65,
+            'hours' => 4,
+            'adjustments' => [
+                ['kind' => 'Bonus', 'reason' => 'Weekend call-out', 'amountCents' => 5000],
+                ['kind' => 'Deduction', 'reason' => 'Late arrival', 'amountCents' => 1500],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        self::assertSame(200, $status);
+        self::assertSame([
+            'type' => 'Hourly',
+            'lines' => [
+                ['label' => 'Labor - Hourly pay (4 hr x $65.00)', 'amount' => 260.0],
+                ['label' => 'Bonus - Weekend call-out', 'amount' => 50.0],
+                ['label' => 'Deduction - Late arrival', 'amount' => -15.0],
+            ],
+            'total' => 295.0,
+        ], $body);
+    }
+
+    public static function invalidAdjustments(): array
+    {
+        return PayCalculatorTest::invalidAdjustments() + [
+            'numeric-key object list' => [(object) [
+                ['kind' => 'Bonus', 'reason' => 'Weekend call-out', 'amountCents' => 2500],
+            ], 'adjustments must be a list'],
+            'negative total' => [[
+                ['kind' => 'Deduction', 'reason' => 'Correction', 'amountCents' => 10001],
+            ], 'deductions must not exceed the rest of the pay'],
+        ];
+    }
+
+    #[DataProvider('invalidAdjustments')]
+    public function testQuoteWithInvalidAdjustments(mixed $adjustments, string $error): void
+    {
+        [$status, $body] = (new App())->handle('POST', '/quote', json_encode([
+            'type' => 'Fixed',
+            'rate' => 100,
+            'adjustments' => $adjustments,
+        ], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION));
+
+        self::assertSame(400, $status);
+        self::assertSame(['error' => $error], $body);
+    }
+
     public function testQuoteWithEmptyExpenses(): void
     {
         $app = new App();

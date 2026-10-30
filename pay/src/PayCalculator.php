@@ -9,6 +9,8 @@ namespace Flightboard\Pay;
  *
  * Input matches the `pay` object of a work order from the API:
  *   ['type' => 'Hourly', 'rate' => 65, 'hours' => 4]
+ * Optional expenses and adjustments lists add expense, Bonus and Deduction lines.
+ * Adjustments have kind, reason and positive amountCents (1 to 100000).
  *
  * Output is a quote:
  *   ['type' => 'Hourly', 'lines' => [['label' => ..., 'amount' => ...]], 'total' => 260.0]
@@ -52,12 +54,43 @@ final class PayCalculator
             $lines[] = ['label' => 'Expense - ' . $expense['category'], 'amount' => (float) $amountCents / 100];
         }
 
+        $adjustments = array_key_exists('adjustments', $pay) ? $pay['adjustments'] : [];
+        if (!is_array($adjustments) || !array_is_list($adjustments)) {
+            throw new InvalidPay('adjustments must be a list');
+        }
+        if (count($adjustments) > 5) {
+            throw new InvalidPay('adjustments must have at most 5 items');
+        }
+        foreach ($adjustments as $adjustment) {
+            if (!is_array($adjustment) || !in_array($adjustment['kind'] ?? null, ['Bonus', 'Deduction'], true)) {
+                throw new InvalidPay('adjustment kind must be Bonus or Deduction');
+            }
+            if (!is_string($adjustment['reason'] ?? null) || trim($adjustment['reason']) === '') {
+                throw new InvalidPay('adjustment reason must be a non-empty string');
+            }
+            $amountCents = $adjustment['amountCents'] ?? null;
+            if (!is_int($amountCents) || $amountCents < 1 || $amountCents > 100000) {
+                throw new InvalidPay('adjustment amountCents must be a whole number from 1 to 100000');
+            }
+            $amount = (float) $amountCents / 100;
+            $lines[] = [
+                'label' => $adjustment['kind'] . ' - ' . $adjustment['reason'],
+                'amount' => $adjustment['kind'] === 'Bonus' ? $amount : -$amount,
+            ];
+        }
+
         $total = array_sum(array_column($lines, 'amount'));
+        if ($expenses !== [] || $adjustments !== []) {
+            $total = round($total, 2);
+        }
+        if ($total < 0) {
+            throw new InvalidPay('deductions must not exceed the rest of the pay');
+        }
 
         return [
             'type' => $type,
             'lines' => $lines,
-            'total' => $expenses === [] ? $total : round($total, 2),
+            'total' => $total,
         ];
     }
 
