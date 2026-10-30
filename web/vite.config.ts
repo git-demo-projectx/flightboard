@@ -19,6 +19,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // PayRunPage tests render 100+ work orders and need more than the 5 s default on CI runners.
+    testTimeout: 20_000,
     // CI uploads coverage/lcov.info to SonarQube Cloud (npm run test:coverage).
     coverage: {
       provider: 'v8',
