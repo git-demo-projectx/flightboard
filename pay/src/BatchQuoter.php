@@ -10,7 +10,7 @@ final class BatchQuoter
     {
     }
 
-    /** @return array{items: list<array{id: int, labor: float, expenses: float, total: float}>, count: int, total: float} */
+    /** @return array{items: list<array{id: int, labor: float, expenses: float, adjustments: float, total: float}>, count: int, total: float} */
     public function quote(mixed $items): array
     {
         if (!is_array($items) || !array_is_list($items) || count($items) < 1 || count($items) > 100) {
@@ -42,6 +42,11 @@ final class BatchQuoter
             if (!is_int($approvedExpenseCents) || $approvedExpenseCents < 0) {
                 throw new InvalidPay($prefix . 'approvedExpenseCents must be a whole number of 0 or more');
             }
+            $adjustmentCents = array_key_exists('adjustmentCents', $item)
+                ? $item['adjustmentCents'] : 0;
+            if (!is_int($adjustmentCents) || $adjustmentCents < -500000 || $adjustmentCents > 500000) {
+                throw new InvalidPay($prefix . 'adjustmentCents must be a whole number from -500000 to 500000');
+            }
 
             unset($pay['expenses']);
             try {
@@ -52,11 +57,17 @@ final class BatchQuoter
 
             $labor = $quote['total'];
             $expenses = round($approvedExpenseCents / 100, 2);
+            $adjustments = round($adjustmentCents / 100, 2);
+            $total = round($labor + $expenses + $adjustments, 2);
+            if ($total < 0) {
+                throw new InvalidPay($prefix . 'deductions must not exceed the rest of the pay');
+            }
             $quoted[] = [
                 'id' => $id,
                 'labor' => $labor,
                 'expenses' => $expenses,
-                'total' => round($labor + $expenses, 2),
+                'adjustments' => $adjustments,
+                'total' => $total,
             ];
         }
 

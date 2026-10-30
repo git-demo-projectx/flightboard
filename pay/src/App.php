@@ -10,7 +10,7 @@ namespace Flightboard\Pay;
  * Routes:
  *   GET  /health  -> {"status":"ok"}
  *   POST /quote   -> a quote from PayCalculator::quote()
- *   POST /quotes  -> batch labor and approved expense totals
+ *   POST /quotes  -> batch labor, approved expense and adjustment totals
  */
 final class App
 {

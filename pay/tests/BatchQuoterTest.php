@@ -21,12 +21,52 @@ final class BatchQuoterTest extends TestCase
 
         self::assertSame([
             'items' => [
-                ['id' => 2, 'labor' => 260.0, 'expenses' => 18.0, 'total' => 278.0],
-                ['id' => 1, 'labor' => 216.0, 'expenses' => 0.0, 'total' => 216.0],
+                ['id' => 2, 'labor' => 260.0, 'expenses' => 18.0, 'adjustments' => 0.0, 'total' => 278.0],
+                ['id' => 1, 'labor' => 216.0, 'expenses' => 0.0, 'adjustments' => 0.0, 'total' => 216.0],
             ],
             'count' => 2,
             'total' => 494.0,
         ], (new BatchQuoter(new PayCalculator()))->quote($items));
+    }
+
+    public function testAddsBonusesAndDeductions(): void
+    {
+        self::assertSame([
+            'items' => [
+                ['id' => 1, 'labor' => 140.0, 'expenses' => 12.5, 'adjustments' => 25.0, 'total' => 177.5],
+                ['id' => 2, 'labor' => 140.0, 'expenses' => 0.0, 'adjustments' => -15.0, 'total' => 125.0],
+            ],
+            'count' => 2,
+            'total' => 302.5,
+        ], (new BatchQuoter(new PayCalculator()))->quote([
+            ['id' => 1, 'pay' => ['type' => 'Fixed', 'rate' => 140], 'approvedExpenseCents' => 1250, 'adjustmentCents' => 2500],
+            ['id' => 2, 'pay' => ['type' => 'Fixed', 'rate' => 140], 'adjustmentCents' => -1500],
+        ]));
+    }
+
+    public function testAllowsDeductionsEqualToLaborAndExpenses(): void
+    {
+        $quote = (new BatchQuoter(new PayCalculator()))->quote([
+            ['id' => 1, 'pay' => ['type' => 'Fixed', 'rate' => 140], 'approvedExpenseCents' => 1250, 'adjustmentCents' => -15250],
+        ]);
+
+        self::assertSame(-152.5, $quote['items'][0]['adjustments']);
+        self::assertSame(0.0, $quote['items'][0]['total']);
+        self::assertSame(0.0, $quote['total']);
+    }
+
+    public function testAcceptsAdjustmentBoundariesAndFractionalDollars(): void
+    {
+        $quote = (new BatchQuoter(new PayCalculator()))->quote([
+            ['id' => 1, 'pay' => ['type' => 'Fixed', 'rate' => 5000], 'adjustmentCents' => -500000],
+            ['id' => 2, 'pay' => ['type' => 'Fixed', 'rate' => 1], 'adjustmentCents' => 500000],
+            ['id' => 3, 'pay' => ['type' => 'Fixed', 'rate' => 0.104], 'adjustmentCents' => 1],
+            ['id' => 4, 'pay' => ['type' => 'Fixed', 'rate' => 0.104], 'adjustmentCents' => -1],
+        ]);
+
+        self::assertSame([-5000.0, 5000.0, 0.01, -0.01], array_column($quote['items'], 'adjustments'));
+        self::assertSame([0.0, 5001.0, 0.11, 0.09], array_column($quote['items'], 'total'));
+        self::assertSame(5001.2, $quote['total']);
     }
 
     #[DataProvider('nestedExpenses')]
@@ -53,9 +93,9 @@ final class BatchQuoterTest extends TestCase
     {
         self::assertSame([
             'items' => [
-                ['id' => 1, 'labor' => 0.104, 'expenses' => 0.01, 'total' => 0.11],
-                ['id' => 2, 'labor' => 0.104, 'expenses' => 0.02, 'total' => 0.12],
-                ['id' => 3, 'labor' => 0.104, 'expenses' => 0.0, 'total' => 0.1],
+                ['id' => 1, 'labor' => 0.104, 'expenses' => 0.01, 'adjustments' => 0.0, 'total' => 0.11],
+                ['id' => 2, 'labor' => 0.104, 'expenses' => 0.02, 'adjustments' => 0.0, 'total' => 0.12],
+                ['id' => 3, 'labor' => 0.104, 'expenses' => 0.0, 'adjustments' => 0.0, 'total' => 0.1],
             ],
             'count' => 3,
             'total' => 0.33,
@@ -95,6 +135,7 @@ final class BatchQuoterTest extends TestCase
         $listError = 'items must be a list of 1 to 100 work orders';
         $idError = 'item 1: id must be a positive whole number';
         $expenseError = 'item 1: approvedExpenseCents must be a whole number of 0 or more';
+        $adjustmentError = 'item 1: adjustmentCents must be a whole number from -500000 to 500000';
 
         return [
             'null list' => [null, $listError],
@@ -120,6 +161,13 @@ final class BatchQuoterTest extends TestCase
             'string expenses' => [[array_replace($item, ['approvedExpenseCents' => '12'])], $expenseError],
             'boolean expenses' => [[array_replace($item, ['approvedExpenseCents' => true])], $expenseError],
             'expenses before calculator' => [[['id' => 1, 'pay' => [], 'approvedExpenseCents' => -1]], $expenseError],
+            'fractional adjustment' => [[array_replace($item, ['adjustmentCents' => 1.5])], $adjustmentError],
+            'string adjustment' => [[array_replace($item, ['adjustmentCents' => '100'])], $adjustmentError],
+            'adjustment below minimum' => [[array_replace($item, ['adjustmentCents' => -500001])], $adjustmentError],
+            'adjustment above maximum' => [[array_replace($item, ['adjustmentCents' => 500001])], $adjustmentError],
+            'null adjustment' => [[array_replace($item, ['adjustmentCents' => null])], $adjustmentError],
+            'boolean adjustment' => [[array_replace($item, ['adjustmentCents' => true])], $adjustmentError],
+            'second item excessive deduction' => [[$item, ['id' => 2, 'pay' => $item['pay'], 'adjustmentCents' => -14001]], 'item 2: deductions must not exceed the rest of the pay'],
             'second item calculator error' => [[$item, ['id' => 2, 'pay' => ['type' => 'Hourly', 'rate' => 65]]], 'item 2: hours must be a number'],
         ];
     }
